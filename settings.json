@@ -1,0 +1,14 @@
+{
+  "version": "opensource",
+  "chrome_version": "119",
+  "debug": false,
+  "default_new_tab": "https://google.com/",
+  "onload_pages": [
+    "index",
+    "https://whoer.net/ru#"
+  ],
+  "check_for_updates": false,
+  "change_location": false,
+  "set_random_window_size": false
+
+}

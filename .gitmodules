@@ -1,0 +1,4 @@
+
+[submodule "account_manager_private_part"]
+	path = account_manager_private_part
+	url = https://github.com/Stefan12321/account_manager_private_part
