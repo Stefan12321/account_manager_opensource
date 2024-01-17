@@ -32,16 +32,18 @@ from dialogs.message_dialogs import open_error_dialog
 from password_decryptor.passwords_decryptor import do_decrypt
 from zipfile import ZipFile
 from accounts_manager_main.settings import MainSettings
-
+APP_VERSION = "0.65"
 if main_config.config_data["version"] == "opensource":
     from accounts_manager_main.web_browser import WebBrowser
     from accounts_manager_main.settings import SettingsDialog
-    APP_VERSION = "0.65 opensource"
+    APP_VERSION += " opensource"
 
 elif main_config.config_data["version"] == "private":
     from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
     from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
-    APP_VERSION = "0.65 private"
+    main_config = Config([os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"],
+                          f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json'])
+    APP_VERSION += " private"
 else:
     open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
     logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
@@ -421,17 +423,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dlg.exec()
 
     def open_main_settings(self):
-        settings_main = deserialize("./settings.json")
+        settings_main = main_config.config_data
 
         dlg = MainSettings()
         dlg.add_settings_fields(settings_main)
         dlg.add_box_buttons()
         dlg.show()
-        # dlg.showMinimized()
         result = dlg.exec()
         if result:
             settings_main = dlg.update_settings(settings_main)
-            serialize('./settings.json', settings_main)
+            main_config.update(settings_main)
 
     def create_profile(self):
         dlg = CreateAccountDialog()
