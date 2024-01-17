@@ -32,15 +32,18 @@ from dialogs.message_dialogs import open_error_dialog
 from password_decryptor.passwords_decryptor import do_decrypt
 from zipfile import ZipFile
 from accounts_manager_main.settings import MainSettings
+
 APP_VERSION = "0.65"
 if main_config.config_data["version"] == "opensource":
     from accounts_manager_main.web_browser import WebBrowser
     from accounts_manager_main.settings import SettingsDialog
+
     APP_VERSION += " opensource"
 
 elif main_config.config_data["version"] == "private":
     from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
     from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
+
     main_config = Config([os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"],
                           f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json'])
     APP_VERSION += " private"
@@ -50,6 +53,10 @@ else:
 from updater.update_application import update_application
 
 DEBUG = (os.getenv("DEBUG_ACCOUNT_MANAGER", default='False') == 'True')
+
+os.makedirs("logs/Main_log", exist_ok=True)
+os.makedirs("extension", exist_ok=True)
+os.makedirs("profiles", exist_ok=True)
 
 
 class QListCustomWidgetNew(QtWidgets.QWidget, Ui_Custom_widget):
