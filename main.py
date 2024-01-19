@@ -41,12 +41,17 @@ if main_config.config_data["version"] == "opensource":
     APP_VERSION += " opensource"
 
 elif main_config.config_data["version"] == "private":
-    from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
-    from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
+    try:
+        from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
+        from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
 
-    main_config = Config([os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"],
-                          f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json'])
-    APP_VERSION += " private"
+        main_config = Config([os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"],
+                              f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json'])
+        APP_VERSION += " private"
+    except PermissionError:
+        logging.error("You can't use this version of app")
+        main_config.update({"version": "opensource"})
+        raise PermissionError
 else:
     open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
     logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
