@@ -32,10 +32,20 @@ class Ui_Dialog(object):
 "QPushButton::pressed{\n"
 "    background-color: rgb(179, 179, 179);\n"
 "}")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.dialog)
+        self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
+        self.scrollArea = QtWidgets.QScrollArea(Dialog)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 380, 204))
+        self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
+        self.scrollLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
+        self.scrollLayout.setObjectName("scrollLayout")
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout.addWidget(self.scrollArea)
 
-        self.retranslateUi(self.dialog)
+        self.retranslateUi(Dialog)
         QtCore.QMetaObject.connectSlotsByName(self.dialog)
 
     def retranslateUi(self, Dialog):

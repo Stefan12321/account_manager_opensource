@@ -7,7 +7,7 @@ import threading
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal, Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QMessageBox, QToolTip
+from PyQt5.QtWidgets import QMessageBox, QToolTip, QDesktopWidget, QLayout
 
 from dialogs.settings_dialog import Ui_Dialog as Ui_settings_dialog
 from dialogs.settings_main import Ui_Dialog as Ui_main_settings_dialog
@@ -101,11 +101,21 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
         QToolTip.setFont(QFont('Arial', 10))
+        self.col = 0
+        self.row = 0
+        screen_info = QDesktopWidget().screenGeometry()
+        self.screen_height = screen_info.height()
+
         self.setupUi(self)
         self.pages_list = []
         self.pages_dict = {}
         self.fields = []
-        self.resize(400, 300)  # TODO this is bad solution for minimize window onstart, need to refactor
+
+        self.resize(400,
+                    int(self.screen_height * 0.8))  # TODO this is bad solution for minimize window onstart, need to refactor
+
+    def add_to_scroll_layout(self, layout: QLayout):
+        self.scrollLayout.addLayout(layout)
 
     def update_settings(self, settings: dict) -> dict:
         for field in self.fields:
@@ -190,11 +200,11 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         push_button_add_page.setSizePolicy(size_policy)
         push_button_add_page.setMaximumSize(QtCore.QSize(30, 30))
         push_button_add_page.setObjectName("pushButton_add_page")
+        horizontal_layout_3.addWidget(label)
         horizontal_layout_3.addWidget(push_button_add_page)
         push_button_add_page.setText("+")
 
-        self.verticalLayout.addWidget(label)
-        self.verticalLayout.addLayout(horizontal_layout_3)
+        self.add_to_scroll_layout(horizontal_layout_3)
         for item in field_data:
             self.add_one_page_onload(item, scroll_area_widget_contents, vertical_layout_2)
 
@@ -212,8 +222,10 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         line_edit.setToolTip(tooltip)
 
         self.fields.append(line_edit)
-        self.verticalLayout.addWidget(label)
-        self.verticalLayout.addWidget(line_edit)
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.addWidget(label)
+        vertical_layout.addWidget(line_edit)
+        self.add_to_scroll_layout(vertical_layout)
 
     def add_bool_field(self, field_name: str, field_data: str, tooltip=""):
         check_box = QtWidgets.QCheckBox(self.dialog)
@@ -222,7 +234,9 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         check_box.setCheckState(Qt.CheckState.Checked if field_data else Qt.CheckState.Unchecked)
         check_box.setToolTip(tooltip)
         self.fields.append(check_box)
-        self.verticalLayout.addWidget(check_box)
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.addWidget(check_box)
+        self.add_to_scroll_layout(vertical_layout)
 
     def add_int_field(self, field_name: str, field_data: str, tooltip=""):
         label = QtWidgets.QLabel(self.dialog)
@@ -233,15 +247,19 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         spin_box.setValue(field_data)
         spin_box.setToolTip(tooltip)
         self.fields.append(spin_box)
-        self.verticalLayout.addWidget(label)
-        self.verticalLayout.addWidget(spin_box)
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.addWidget(label)
+        vertical_layout.addWidget(spin_box)
+        self.add_to_scroll_layout(vertical_layout)
 
     def add_box_buttons(self):
         button_box = QtWidgets.QDialogButtonBox(self.dialog)
         button_box.setOrientation(QtCore.Qt.Horizontal)
         button_box.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel | QtWidgets.QDialogButtonBox.Ok)
         button_box.setObjectName("buttonBox")
-        self.verticalLayout.addWidget(button_box)
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.addWidget(button_box)
+        self.verticalLayout.addLayout(vertical_layout)
         button_box.accepted.connect(self.dialog.accept)
         button_box.rejected.connect(self.dialog.reject)
 

@@ -22,3 +22,5 @@ __pycache__
 /extension/selfproxy/service-worker-test.js
 /key
 /token
+/accounts_manager_opensource.pyproject
+/accounts_manager_opensource.pyproject.user

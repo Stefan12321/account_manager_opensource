@@ -208,14 +208,6 @@ class ProgressBarDialog(Ui_progress_bar, QtWidgets.QDialog):
         self.close()
 
 
-class QListCustomWidget(QtWidgets.QListWidgetItem):
-    def __init__(self, parent=None):
-        super(QListCustomWidget, self).__init__(parent)
-        self.name = None
-        self.status: bool = False
-        self.thread: threading.Thread or None = None
-
-
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     progress_signal = QtCore.pyqtSignal(int)
     progress_exit_signal = QtCore.pyqtSignal()
@@ -233,7 +225,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except FileNotFoundError:
             os.makedirs(fr"{os.path.dirname(os.path.realpath(__file__))}\profiles")
             self.browsers_names = []
-        self.list_item_arr = []
+        self.list_item_arr: List[QListAccountsWidgetItem] = []
         for i in self.browsers_names:
             self.create_list_item(i)
 
@@ -242,7 +234,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def add_functions(self):
         self.listWidget.itemClicked.connect(self.item_click)
-        self.CreateAccountButton.clicked.connect(self.create_profile)
+        self.CreateAccountButton.clicked.connect(self.on_create_profile_btn_click)
         self.pushButtonDeleteAccounts.clicked.connect(self.delete_profiles)
         self.exportProfileButton.clicked.connect(self.export_profiles)
         self.importProfileButton.clicked.connect(self.import_profiles)
@@ -429,12 +421,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dlg.show()
         dlg.exec()
 
-    def open_about(self):
+    @staticmethod
+    def open_about():
         dlg = AboutDlg()
         dlg.show()
         dlg.exec()
 
-    def open_main_settings(self):
+    @staticmethod
+    def open_main_settings():
         settings_main = main_config.config_data
 
         dlg = MainSettings()
@@ -446,22 +440,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             settings_main = dlg.update_settings(settings_main)
             main_config.update(settings_main)
 
-    def create_profile(self):
+    def on_create_profile_btn_click(self):
         dlg = CreateAccountDialog()
         dlg.show()
         result = dlg.exec()
         account_name = dlg.lineEdit.text()
         if result and account_name not in self.browsers_names:
-            self.create_list_item(account_name)
-            path = fr"{os.path.dirname(os.path.realpath(__file__))}\profiles\{account_name}"
-            os.makedirs(path)
-            user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
-            data = {
-                'user-agent': user_agent_
-            }
-            serialize(fr'{path}\config.json', data)
+            self.create_profile(account_name)
         elif account_name in self.browsers_names:
             open_error_dialog(f"Account with name {account_name} is already exist. Try different name")
+
+    def create_profile(self, profile_name: str):
+        self.create_list_item(profile_name)
+        self.browsers_names.append(profile_name)
+        path = fr"{os.path.dirname(os.path.realpath(__file__))}\profiles\{profile_name}"
+        os.makedirs(path)
+        user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
+        data = {
+            'user-agent': user_agent_
+        }
+        serialize(fr'{path}\config.json', data)
 
     def item_click(self, item: QListAccountsWidgetItem):
         item_widget = self.listWidget.itemWidget(item)
@@ -478,7 +476,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             self.show_warning("This browser is already running")
 
-    def run_browser(self, name: str, _queue: queue.Queue, logger: logging.Logger):
+    @staticmethod
+    def run_browser(name: str, _queue: queue.Queue, logger: logging.Logger):
         path = os.path.dirname(os.path.realpath(__file__))
         logger.info(f"Log file created for {name}")
         try:
@@ -487,9 +486,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"Passwords decrypt error: {e}")
 
         logger.info(f"Browser {name} started")
-        WebBrowser(base_path=path, account_name=name, logger=logger, _queue=_queue)
+        WebBrowser(base_path=path, account_name=name, logger=logger, _queue=_queue, main_config=main_config)
 
-    def setup_logger_for_thread(self, path, thread_name) -> logging.Logger:
+    @staticmethod
+    def setup_logger_for_thread(path, thread_name) -> logging.Logger:
         # Create a logger for the thread
         logger = logging.getLogger(thread_name)
         logger.setLevel(logging.INFO)

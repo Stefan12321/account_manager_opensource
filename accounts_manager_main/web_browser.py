@@ -16,12 +16,13 @@ from .serializer import Config
 
 
 class WebBrowser:
-    def __init__(self, base_path, account_name, logger, _queue: queue.Queue, start_browser=True):
+    def __init__(self, base_path, account_name,
+                 logger, _queue: queue.Queue,main_config: Config, start_browser=True):
         self.logger = logger
         self.base_dir = base_path
         self.path = fr"{self.base_dir}\profiles\{account_name}"
         self.logger.info(fr"PATH {self.path}")
-        self.config_main = Config(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
+        self.config_main = main_config
         self.config = Config(fr'{self.path}\config.json')
         self.account_name = account_name
         self._queue = _queue
