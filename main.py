@@ -8,12 +8,12 @@ from PyQt5.QtWidgets import QMessageBox
 
 freeze_support()
 import os
-from accounts_manager_main.serializer import serialize, deserialize, Config
+from accounts_manager_main.serializer import serialize, deserialize, Config, MainConfig
 
 os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
 os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.path.dirname(os.path.realpath(__file__))}/settings.json"
 
-main_config = Config(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
+main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 os.environ["DEBUG_ACCOUNT_MANAGER"] = str(main_config.config_data["debug"])
 import time
 import threading
@@ -45,12 +45,9 @@ elif main_config.config_data["version"] == "private":
         from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
         from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
 
-        main_config = Config([os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"],
-                              f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json'])
         APP_VERSION += " private"
     except PermissionError:
         logging.error("You can't use this version of app")
-        main_config.update({"version": "opensource"})
         raise PermissionError
 else:
     open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
@@ -114,55 +111,8 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
         path = fr'{os.path.dirname(os.path.realpath(__file__))}\profiles\{self.name}'
 
         dlg = SettingsDialog(account_name=self.name, _queue=self._queue, logger=self.logger)
-        config = dlg.config
-        default_values = {
-            "extensions": {},
-            "line_number": "",
-            "proxy": "",
-            "location": ["", ""],
-            "default_new_tab": ""
-        }
-        user_agent = self.get_config_data(config, "user-agent")
-        extensions = self.get_config_data(config, "extensions", default_values["extensions"])
-        line_number = self.get_config_data(config, "line_number", default_values["line_number"])
-        proxy_id = self.get_config_data(config, "proxy", default_values["proxy"])
-        latitude, longitude = self.get_config_data(config, "location", default_values["location"])
-        default_tab = self.get_config_data(main_config, "default_new_tab", default_values["default_new_tab"])
-
-        try:
-            passwords = do_decrypt(path)
-            dlg.passwords_textBrowser.setText(passwords)
-        except Exception as e:
-            logging.error(f"Can`t decrypt passwords, {e}")
-        dlg.lineEdit_line_number.setText(str(line_number))
-        dlg.proxy_id_lineEdit.setText(str(proxy_id))
-        dlg.new_tab_lineEdit.setText(str(default_tab))
-        dlg.latitude_lineEdit.setText(latitude)
-        dlg.longitude_lineEdit.setText(longitude)
-        for item in dlg.items:
-            if item.extension_name in extensions and extensions[item.extension_name] is True:
-                item.setCheckState(QtCore.Qt.Checked)
         dlg.show()
-        result = dlg.exec()
-        if result:
-            extensions.update({item.extension_name: item.checkState() == QtCore.Qt.Checked for item in dlg.items})
-            logging.info(f"Update extensions:{extensions}")
-            config.config_data.update({"extensions": extensions})
-            if dlg.user_agent_line.text() != user_agent:
-                config.config_data.update({"user-agent": dlg.user_agent_line.text()})
-            if dlg.lineEdit_line_number.text() != line_number:
-                config.config_data.update({"line_number": int(dlg.lineEdit_line_number.text())})
-            if dlg.latitude_lineEdit.text() != latitude or dlg.longitude_lineEdit.text() != longitude:
-                config.config_data.update({"location": [dlg.latitude_lineEdit.text(), dlg.longitude_lineEdit.text()]})
-
-            config.update(config.config_data)
-
-    def get_config_data(self, config, key, default_value=None):
-        if key in config.config_data:
-            return config.config_data[key]
-        else:
-            logging.warning(f"There is no {key} in config file")
-            return default_value
+        dlg.exec()
 
     def setTextUp(self, text):
         self.account_name_label.setText(text)

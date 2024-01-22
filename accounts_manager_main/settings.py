@@ -3,6 +3,7 @@ import logging
 import os
 import queue
 import threading
+from typing import List, Dict, Any
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal, Qt
@@ -11,7 +12,7 @@ from PyQt5.QtWidgets import QMessageBox, QToolTip, QDesktopWidget, QLayout
 
 from dialogs.settings_dialog import Ui_Dialog as Ui_settings_dialog
 from dialogs.settings_main import Ui_Dialog as Ui_main_settings_dialog
-from .serializer import Config
+from .serializer import Config, MainConfig
 
 DEBUG = (os.getenv("DEBUG_ACCOUNT_MANAGER", default='False') == 'True')
 
@@ -42,7 +43,6 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         self.name = account_name
         self.config = self.setup_config()
         self.main_config = self.setup_main_config()
-        self.setup_user_agent()
         extension_list = os.listdir(fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\extension')
         for extension_name in extension_list:
             text = extension_name
@@ -52,13 +52,51 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
             item.setCheckState(QtCore.Qt.Unchecked)
             self.items.append(item)
             self.listWidgetExtensions.addItem(item)
+        self.default_values = {
+            "extensions": {},
+            "line_number": "",
+            "proxy": "",
+            "latitude": "",
+            "longitude": "",
+            "default_new_tab": ""
+        }
         self.private_fields = [self.search_clean_ip_pushButton,
                                self.lineEdit_line_number,
                                self.label_line_number,
                                self.proxy_id_label,
                                self.proxy_id_lineEdit]
+        self.fields: List[Dict[str, Any]] = [
+            {"name": "user-agent",
+             "field": self.user_agent_line,
+             "data_from_config": self.config.get_data_by_key("user-agent", "")
+             },
+            {"name": "line_number",
+             "field": self.lineEdit_line_number,
+             "data_from_config": self.config.get_data_by_key("line_number", self.default_values["line_number"])},
+            {"name": "proxy",
+             "field": self.proxy_id_lineEdit,
+             "data_from_config": self.config.get_data_by_key("proxy", self.default_values["proxy"])},
+            {"name": "latitude",
+             "field": self.latitude_lineEdit,
+             "data_from_config": self.config.get_data_by_key("latitude", self.default_values["latitude"])},
+            {"name": "longitude",
+             "field": self.longitude_lineEdit,
+             "data_from_config": self.config.get_data_by_key("longitude", self.default_values["longitude"])},
+            {"name": "default_new_tab",
+             "field": self.new_tab_lineEdit,
+             "data_from_config": self.main_config.get_data_by_key("default_new_tab",
+                                                             self.default_values["default_new_tab"])},
+        ]
+
         self._add_functions()
         self._private_buttons()
+        self._fill_fields()
+
+    def exec(self) -> int:
+        res = super().exec()
+        if res:
+            self._update_config()
+        return res
 
     def _add_functions(self):
         self.new_tab_pushButton.clicked.connect(self.open_new_tab_with_url)
@@ -67,22 +105,31 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         for field in self.private_fields:
             field.hide()
 
+    def _fill_fields(self):
+        for field in self.fields:
+            field["field"].setText(field["data_from_config"])
+        extensions = self.config.get_data_by_key("extensions", self.default_values["extensions"])
+        for item in self.items:
+            if item.extension_name in extensions and extensions[item.extension_name] is True:
+                item.setCheckState(QtCore.Qt.Checked)
+
+    def _update_config(self):
+        config_update = {}
+        for field in self.fields:
+            new_data = field["field"].text()
+            if new_data != field["data_from_config"]:
+                config_update.update({field["name"]: new_data})
+        config_update.update({item.extension_name: item.checkState() == QtCore.Qt.Checked for item in self.items})
+        self.config.update(config_update)
+
     def setup_config(self) -> Config:
         self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
         config = Config(fr"{self.path}\config.json")
         return config
 
-    def setup_main_config(self) -> Config:
-        main_config = Config(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\settings.json")
+    def setup_main_config(self) -> MainConfig:
+        main_config = MainConfig(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\settings.json")
         return main_config
-
-    def setup_user_agent(self) -> None:
-        try:
-            user_agent = self.config.config_data["user-agent"]
-        except KeyError:
-            self.config.update({"user-agent": ""})
-            user_agent = ""
-        self.user_agent_line.setText(user_agent)
 
     @pyqtSlot(int)
     def handle_message_box_response(self, button):

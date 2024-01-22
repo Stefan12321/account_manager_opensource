@@ -41,6 +41,36 @@ class Serializer:
 
 
 class Config(Serializer):
+    def __init__(self, path: str):
+        self.path = path
+        self.config_data = {}
+        self._read_config()
+
+    def _read_config(self):
+        try:
+            self.config_data.update(self.deserialize(self.path))
+        except FileNotFoundError:
+            os.makedirs(self.path)
+            self.serialize({}, self.path)
+        except PermissionError:
+            self.serialize({}, self.path)
+
+    def update(self, data: dict) -> bool:
+        resp = super().update(data, self.path)
+        if resp:
+            self.config_data = self.deserialize(self.path)
+        return resp
+
+    def get_data_by_key(self, key: str, default_value=None):
+        if key in self.config_data:
+            return self.config_data[key]
+        else:
+            logging.warning(f"There is no {key} in config file")
+            self.update({key: default_value})
+            return default_value
+
+
+class MainConfig(Serializer):
     def __init__(self, path: str or List[str]):
         if isinstance(path, str):
             self.paths = [path]
@@ -51,6 +81,7 @@ class Config(Serializer):
         self.config_paths = {}
         self.config_data = {}
         self._read_configs()
+        self._try_to_read_private_config()
 
     def _read_configs(self):
         for path in self.paths:
@@ -62,6 +93,16 @@ class Config(Serializer):
                 self.serialize({}, path)
             except PermissionError:
                 self.serialize({}, path)
+
+    def _try_to_read_private_config(self):
+        if self.config_data["version"] == "private":
+            try:
+                self.paths.append(
+                    f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json')
+                self._read_configs()
+            except (FileNotFoundError, PermissionError):
+                logging.error("You can't use this version of app")
+                self.update({"version": "opensource"})
 
     def update(self, data: dict) -> bool:
         for path in self.paths:
@@ -75,6 +116,14 @@ class Config(Serializer):
             else:
                 return resp
         return resp
+
+    def get_data_by_key(self, key: str, default_value=None):
+        if key in self.config_data:
+            return self.config_data[key]
+        else:
+            logging.warning(f"There is no {key} in config file")
+            self.update({key: default_value})
+            return default_value
 
 
 def serialize(path, data: dict):
