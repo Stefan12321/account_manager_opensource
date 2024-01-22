@@ -1,0 +1,60 @@
+#pushButtonDeleteAccounts, #exportProfileButton{
+height: 24px;
+border: 1px solid;
+border-radius: 4px;
+border-color:  rgba(0, 0, 0, 0.12);
+color: #ffffff;
+font: "Roboto";
+font-size: 20px;
+padding: 5px;
+background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0.414773 rgba(195, 20, 50, 255), stop:1 rgba(36, 11, 54, 255));
+}
+
+#pushButtonDeleteAccounts::hover{
+	background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0.0852273 rgba(195, 20, 50, 255), stop:1 rgba(36, 11, 54, 255));
+}
+#pushButtonDeleteAccounts::pressed{
+	background-color: qlineargradient(spread:pad, x1:0, y1:0, x2:1, y2:1, stop:0 rgba(157, 16, 40, 255), stop:0.590909 rgba(38, 12, 56, 255));
+}
+QDialogButtonBox,QPushButton{
+height: 36px;
+border: 1px solid;
+border-radius: 4px;
+border-color:  rgba(0, 0, 0, 0.12);
+color: #6200ee;
+font: "Roboto";
+font-size: 20px;
+padding: 5px
+}
+QPushButton::hover{
+	background-color: rgb(230, 230, 230);
+}
+QPushButton::pressed{
+	background-color: rgb(179, 179, 179);
+}
+
+QListWidget{
+border: none;
+
+}
+#CreateAccountButton, #importProfileButton{
+	color: rgb(255, 255, 255);
+	background-color: qlineargradient(spread:pad, x1:0.0113636, y1:0.409, x2:1, y2:0.477, stop:0 rgba(0, 210, 255, 255), stop:1 rgba(58, 123, 213, 255))
+}
+#CreateAccountButton::hover, #importProfileButton::hover{
+	background-color: qlineargradient(spread:pad, x1:0.0113636, y1:0.409, x2:1, y2:0.477, stop:0 rgba(0, 210, 255, 255), stop:0.619318 rgba(58, 123, 213, 255))
+}
+#CreateAccountButton::pressed, #importProfileButton::pressed{
+
+	background-color: qlineargradient(spread:pad, x1:0.0113636, y1:0.409, x2:1, y2:0.477, stop:0 rgba(0, 175, 213, 255), stop:0.619318 rgba(39, 83, 144, 255))
+}
+#exportProfileButton{
+color: rgb(255, 255, 255);
+	background-color: qlineargradient(spread:pad, x1:0, y1:0.472, x2:1, y2:0.682, stop:0 rgba(17, 153, 142, 255), stop:1 rgba(56, 239, 125, 255));
+}
+#exportProfileButton::hover{
+	background-color: qlineargradient(spread:pad, x1:0, y1:0.472, x2:1, y2:0.682, stop:0.261364 rgba(17, 153, 142, 255), stop:0.875 rgba(56, 239, 125, 255));
+}
+#exportProfileButton::pressed{
+	background-color: qlineargradient(spread:pad, x1:0, y1:0.472, x2:1, y2:0.682, stop:0.352273 rgba(13, 120, 112, 255), stop:1 rgba(42, 179, 93, 255));
+}
