@@ -85,7 +85,7 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
             {"name": "default_new_tab",
              "field": self.new_tab_lineEdit,
              "data_from_config": self.main_config.get_data_by_key("default_new_tab",
-                                                             self.default_values["default_new_tab"])},
+                                                                  self.default_values["default_new_tab"])},
         ]
 
         self._add_functions()
@@ -144,6 +144,45 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         self._queue.put(["open_in_new_tab", url])
 
 
+class OnePageOnLoad(QtWidgets.QHBoxLayout):
+    def __init__(self, page_url: str, scroll_area_widget_contents: QtWidgets.QWidget,
+                 layout: QtWidgets.QVBoxLayout):
+        super().__init__()
+        self.layout = layout
+        self.setObjectName("horizontalLayout_2")
+        self.line_edit_add_page = QtWidgets.QLineEdit(scroll_area_widget_contents)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.line_edit_add_page.sizePolicy().hasHeightForWidth())
+        self.line_edit_add_page.setSizePolicy(size_policy)
+        self.line_edit_add_page.setObjectName("lineEditAddPage")
+        self.addWidget(self.line_edit_add_page)
+        self.push_button_remove_page = QtWidgets.QPushButton(scroll_area_widget_contents)
+        self.push_button_remove_page.setEnabled(True)
+        size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
+        size_policy.setHorizontalStretch(0)
+        size_policy.setVerticalStretch(0)
+        size_policy.setHeightForWidth(self.push_button_remove_page.sizePolicy().hasHeightForWidth())
+        self.push_button_remove_page.setSizePolicy(size_policy)
+        self.push_button_remove_page.setMaximumSize(QtCore.QSize(30, 30))
+        self.push_button_remove_page.setObjectName("pushButton_remove_page")
+        self.push_button_remove_page.setText("-")
+        self.push_button_remove_page.clicked.connect(self.deleteItem)
+        self.addWidget(self.push_button_remove_page)
+        self.layout.insertLayout(len(self.layout.children())-1, self)
+        if page_url:
+            self.line_edit_add_page.setText(page_url)
+
+    def deleteItem(self):
+        self.removeWidget(self.push_button_remove_page)
+        self.removeWidget(self.line_edit_add_page)
+        self.push_button_remove_page.deleteLater()
+        self.line_edit_add_page.deleteLater()
+        self.layout.removeItem(self)
+        self.deleteLater()
+
+
 class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
     def __init__(self):
         QtWidgets.QDialog.__init__(self)
@@ -157,9 +196,7 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         self.pages_list = []
         self.pages_dict = {}
         self.fields = []
-
-        self.resize(400,
-                    int(self.screen_height * 0.8))  # TODO this is bad solution for minimize window onstart, need to refactor
+        self.setMaximumSize(QtCore.QSize(400, int(self.screen_height * 0.8)))
 
     def add_to_scroll_layout(self, layout: QLayout):
         self.scrollLayout.addLayout(layout)
@@ -216,10 +253,6 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
                     self.add_list_field(key, key_data, tooltip)
 
     def add_list_field(self, field_name: str, field_data: list, tooltip=""):
-        label = QtWidgets.QLabel(self.dialog)
-        label.setObjectName(f"{field_name}_label")
-        label.setText(field_name.replace("_", " "))
-        label.setToolTip(tooltip)
         horizontal_layout_3 = QtWidgets.QHBoxLayout()
         horizontal_layout_3.setObjectName("horizontalLayout_3")
         scroll_area = QtWidgets.QScrollArea(self.dialog)
@@ -235,6 +268,11 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
 
         horizontal_layout_2 = QtWidgets.QHBoxLayout()
         horizontal_layout_2.setObjectName("horizontalLayout_2")
+        vertical_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Minimum,
+                                                    QtWidgets.QSizePolicy.Expanding)
+        horizontal_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding,
+                                                      QtWidgets.QSizePolicy.Minimum)
+
         vertical_layout_2.addLayout(horizontal_layout_2)
 
         scroll_area.setWidget(scroll_area_widget_contents)
@@ -246,9 +284,14 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         size_policy.setHeightForWidth(push_button_add_page.sizePolicy().hasHeightForWidth())
         push_button_add_page.setSizePolicy(size_policy)
         push_button_add_page.setMaximumSize(QtCore.QSize(30, 30))
+        push_button_add_page.setMinimumSize(QtCore.QSize(30, 30))
         push_button_add_page.setObjectName("pushButton_add_page")
-        horizontal_layout_3.addWidget(label)
-        horizontal_layout_3.addWidget(push_button_add_page)
+
+        horizontal_layout_4 = QtWidgets.QHBoxLayout()
+        horizontal_layout_4.setObjectName("horizontalLayout_4")
+
+        horizontal_layout_4.addItem(horizontal_spacer_item)
+        horizontal_layout_4.addWidget(push_button_add_page)
         push_button_add_page.setText("+")
 
         self.add_to_scroll_layout(horizontal_layout_3)
@@ -258,6 +301,8 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         push_button_add_page.clicked.connect(
             lambda: self.add_one_page_onload("", scroll_area_widget_contents, vertical_layout_2))
         self.fields.append(scroll_area_widget_contents)
+        vertical_layout_2.addLayout(horizontal_layout_4)
+        vertical_layout_2.addItem(vertical_spacer_item)
 
     def add_string_field(self, field_name: str, field_data: str, tooltip=""):
         label = QtWidgets.QLabel(self.dialog)
@@ -313,51 +358,12 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
     def add_one_page_onload(self, page_url: str, scroll_area_widget_contents: QtWidgets.QWidget,
                             vertical_layout_2: QtWidgets.QVBoxLayout) -> QtWidgets.QLineEdit:
         try:
-            horizontal_layout_2 = QtWidgets.QHBoxLayout()
-            horizontal_layout_2.setObjectName("horizontalLayout_2")
-            line_edit_add_page = QtWidgets.QLineEdit(scroll_area_widget_contents)
-            size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed)
-            size_policy.setHorizontalStretch(0)
-            size_policy.setVerticalStretch(0)
-            size_policy.setHeightForWidth(line_edit_add_page.sizePolicy().hasHeightForWidth())
-            line_edit_add_page.setSizePolicy(size_policy)
-            line_edit_add_page.setObjectName("lineEditAddPage")
-            horizontal_layout_2.addWidget(line_edit_add_page)
-            push_button_remove_page = QtWidgets.QPushButton(scroll_area_widget_contents)
-            push_button_remove_page.setEnabled(True)
-            size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
-            size_policy.setHorizontalStretch(0)
-            size_policy.setVerticalStretch(0)
-            size_policy.setHeightForWidth(push_button_remove_page.sizePolicy().hasHeightForWidth())
-            push_button_remove_page.setSizePolicy(size_policy)
-            push_button_remove_page.setMaximumSize(QtCore.QSize(30, 30))
-            push_button_remove_page.setObjectName("pushButton_remove_page")
-            push_button_remove_page.setText("-")
-            push_button_remove_page.clicked.connect(lambda: self.deleteItemsOfLayout(horizontal_layout_2))
-            horizontal_layout_2.addWidget(push_button_remove_page)
-            vertical_layout_2.addLayout(horizontal_layout_2)
-            if page_url:
-                line_edit_add_page.setText(page_url)
+            one_page_onload = OnePageOnLoad(page_url, scroll_area_widget_contents, vertical_layout_2)
 
-            self.pages_list.append(line_edit_add_page)
-            self.pages_dict.update({horizontal_layout_2: line_edit_add_page})
-            return line_edit_add_page
+            self.pages_list.append(one_page_onload.line_edit_add_page)
+            self.pages_dict.update({one_page_onload: one_page_onload.line_edit_add_page})
+            return one_page_onload.line_edit_add_page
 
 
         except Exception as e:
             print(e)
-
-    def deleteItemsOfLayout(self, layout):
-        if layout is not None:
-            while layout.count():
-                item = layout.takeAt(0)
-
-                widget = item.widget()
-                if widget is not None:
-                    widget.setParent(None)
-                else:
-                    self.deleteItemsOfLayout(item.layout())
-            try:
-                self.pages_dict.pop(layout)
-            except Exception as e:
-                print(e)
