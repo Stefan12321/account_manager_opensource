@@ -69,6 +69,12 @@ class Config(Serializer):
             self.update({key: default_value})
             return default_value
 
+    def __str__(self):
+        res = ""
+        for key, value in self.config_data.items():
+            res += f"{key}: {value}\n"
+        return res
+
 
 class MainConfig(Serializer):
     def __init__(self, path: str or List[str]):

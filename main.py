@@ -119,12 +119,20 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
 
 
 class QListAccountsWidgetItem(QtWidgets.QListWidgetItem):
-    def __init__(self, parent=None):
+    def __init__(self, name: str, widget: QWidgetOneAccountLine, parent=None, ):
         super(QListAccountsWidgetItem, self).__init__(parent)
-        self.name = None
+        self.name = name
         self.status: bool = False
         self.thread: threading.Thread or None = None
-        self.widget = None
+        self.widget = widget
+        self.setSizeHint(self.widget.sizeHint())
+        if main_config.config_data["accounts_tooltips"]:
+            self.setToolTips()
+
+    def setToolTips(self):
+        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
+        config = Config(fr"{self.path}\config.json")
+        self.setToolTip(str(config))
 
 
 class CreateAccountDialog(Ui_create_account_dialog, QtWidgets.QDialog):
@@ -209,11 +217,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         one_account_line_widget = QWidgetOneAccountLine(logger)
         one_account_line_widget.setTextUp(name)
         one_account_line_widget.name = name
-        qlist_item_one_account = QListAccountsWidgetItem(self.listWidget)
-        qlist_item_one_account.name = name
+        qlist_item_one_account = QListAccountsWidgetItem(name,
+                                                         one_account_line_widget,
+                                                         self.listWidget)
         # Set size hint
-        qlist_item_one_account.setSizeHint(one_account_line_widget.sizeHint())
-        qlist_item_one_account.widget = one_account_line_widget
         # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(qlist_item_one_account)
         self.listWidget.setItemWidget(qlist_item_one_account, one_account_line_widget)
