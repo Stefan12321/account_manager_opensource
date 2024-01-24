@@ -1,8 +1,6 @@
 import os
 import queue
-import threading
 import random
-from typing import Dict
 
 import screeninfo
 import selenium
@@ -17,7 +15,7 @@ from .serializer import Config
 
 class WebBrowser:
     def __init__(self, base_path, account_name,
-                 logger, _queue: queue.Queue,main_config: Config, start_browser=True):
+                 logger, _queue: queue.Queue, main_config: Config, start_browser=True):
         self.logger = logger
         self.base_dir = base_path
         self.path = fr"{self.base_dir}\profiles\{account_name}"
@@ -32,9 +30,19 @@ class WebBrowser:
             self.start_undetected_chrome()
 
     def _prepare_undetected_chrome(self) -> undetected_chromedriver.Chrome:
+        options = self._set_up_options()
+        try:
+            driver = uc.Chrome(options=options, version_main=self.version_main)
+            if self.config_main.config_data["set_random_window_size"]:
+                self.set_random_window_size(driver)
+            return driver
+        except Exception as e:
+            self.logger.error(e)
+            raise e
+
+    def _set_up_options(self) -> undetected_chromedriver.ChromeOptions:
         if os.path.isdir(self.path):
             user_agent_ = self.prepare_user_agent()
-
         base_dir = os.environ["ACCOUNT_MANAGER_BASE_DIR"]
         self.logger.info(f"Base directory: {base_dir}")
         options = uc.ChromeOptions()
@@ -53,15 +61,7 @@ class WebBrowser:
         #       STUN/TURN server?
         options.add_argument(
             "--webrtc-ip-handling-policy=disable_non_proxied_udp")
-
-        try:
-            driver = uc.Chrome(options=options, version_main=self.version_main)
-            if self.config_main.config_data["set_random_window_size"]:
-                self.set_random_window_size(driver)
-            return driver
-        except Exception as e:
-            self.logger.error(e)
-            raise e
+        return options
 
     def start_undetected_chrome(self):
         driver = self._prepare_undetected_chrome()
