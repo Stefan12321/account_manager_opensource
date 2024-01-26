@@ -1,5 +1,5 @@
 # Description
-
+This is small app for managing GoogleChrome browser instances.
 # Build
 ### Build in docker
 
@@ -30,3 +30,28 @@ Build application
 Or You can use it without build
 
 `python main.py`
+
+## Features
+
+- Creating multiple browser instance
+- Connecting precompiled extensions
+- Display all browser-stored passwords
+- Setup on browser load pages 
+- Randomizing browser window size
+- Faked useragent
+- Faked browser geolocation
+- Export/Import profiles
+- Python console for every browser
+
+
+## Future Features
+
+### Platforms support
+- [x] Windows support
+- [ ] Linux support
+
+### Other
+- [ ] Auto updates (on testing stage)
+- [ ] Visual scripting for browser automation (at the concept stage)
+
+
