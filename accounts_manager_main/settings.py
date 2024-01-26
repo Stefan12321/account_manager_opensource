@@ -2,16 +2,16 @@ import csv
 import logging
 import os
 import queue
-import threading
 from typing import List, Dict, Any
 
 from PyQt5 import QtWidgets, QtCore
-from PyQt5.QtCore import pyqtSlot, QThread, pyqtSignal, Qt
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QMessageBox, QToolTip, QDesktopWidget, QLayout
+from PyQt5.QtWidgets import QToolTip, QDesktopWidget, QLayout
 
 from dialogs.settings_dialog import Ui_Dialog as Ui_settings_dialog
 from dialogs.settings_main import Ui_Dialog as Ui_main_settings_dialog
+from pyqtconsole.console import PythonConsole
 from .serializer import Config, MainConfig
 
 DEBUG = (os.getenv("DEBUG_ACCOUNT_MANAGER", default='False') == 'True')
@@ -27,11 +27,13 @@ class QlistExtensionsWidgetItem(QtWidgets.QListWidgetItem):
 
 
 class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
-    def __init__(self, _queue: queue.Queue, logger: logging.Logger, parent=None, account_name=""):
+    def __init__(self, _queue: queue.Queue, logger: logging.Logger, _locals: dict[str, Any], show_console: bool, parent=None,
+                 account_name=""):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
         self._queue = _queue
         self.logger = logger
+        self.locals = _locals
         if DEBUG:
             self.CheckGSButton = QtWidgets.QPushButton(self)
             self.CheckGSButton.setStyleSheet("")
@@ -87,10 +89,25 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
              "data_from_config": self.main_config.get_data_by_key("default_new_tab",
                                                                   self.default_values["default_new_tab"])},
         ]
-
+        if show_console:
+            console = PythonConsole(locals=self.locals)
+            console.eval_in_thread()
+            self.verticalLayout_2.addWidget(console)
+        else:
+            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            self.verticalLayout_2.addItem(spacerItem)
         self._add_functions()
         self._private_buttons()
         self._fill_fields()
+
+    def keyPressEvent(self, event):
+        # Check if the pressed key is the Enter key
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            # You can ignore the event or perform some custom action
+            event.ignore()
+        else:
+            # Call the base class implementation for other key events
+            super().keyPressEvent(event)
 
     def exec(self) -> int:
         res = super().exec()
@@ -131,13 +148,6 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         main_config = MainConfig(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\settings.json")
         return main_config
 
-    @pyqtSlot(int)
-    def handle_message_box_response(self, button):
-        if button == QMessageBox.Ok:
-            print("User clicked OK")
-        else:
-            print("User clicked Cancel")
-
     def open_new_tab_with_url(self):
         url = self.new_tab_lineEdit.text()
         print(url)
@@ -170,7 +180,7 @@ class OnePageOnLoad(QtWidgets.QHBoxLayout):
         self.push_button_remove_page.setText("-")
         self.push_button_remove_page.clicked.connect(self.deleteItem)
         self.addWidget(self.push_button_remove_page)
-        self.layout.insertLayout(len(self.layout.children())-1, self)
+        self.layout.insertLayout(len(self.layout.children()) - 1, self)
         if page_url:
             self.line_edit_add_page.setText(page_url)
 
@@ -269,9 +279,9 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         horizontal_layout_2 = QtWidgets.QHBoxLayout()
         horizontal_layout_2.setObjectName("horizontalLayout_2")
         vertical_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Minimum,
-                                                    QtWidgets.QSizePolicy.Expanding)
+                                                     QtWidgets.QSizePolicy.Expanding)
         horizontal_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding,
-                                                      QtWidgets.QSizePolicy.Minimum)
+                                                       QtWidgets.QSizePolicy.Minimum)
 
         vertical_layout_2.addLayout(horizontal_layout_2)
 
