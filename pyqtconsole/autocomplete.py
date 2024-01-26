@@ -138,6 +138,8 @@ class AutoComplete(QObject):
         if '.' in _buffer and _buffer[0] != '.':
             idx = _buffer.rfind('.') + 1
             _buffer = _buffer[idx:]
+        else:
+            _buffer = _buffer.split()[-1]
 
         if self.mode == COMPLETE_MODE.DROPDOWN:
             self.parent().insert_input_text(completion[len(_buffer):])

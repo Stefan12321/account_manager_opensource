@@ -4,6 +4,7 @@ from multiprocessing import freeze_support
 from typing import List, Callable, Any
 
 import requests
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QMessageBox
 
 freeze_support()
@@ -68,11 +69,15 @@ class QListCustomWidgetNew(QtWidgets.QWidget, Ui_Custom_widget):
 
 
 class QWidgetOneAccountLine(QtWidgets.QWidget):
+    locals_signal = pyqtSignal(dict)
+
     def __init__(self, logger, parent=None):
         super(QWidgetOneAccountLine, self).__init__(parent)
         self.logger = logger
         self.name = None
         self._queue = None
+        self.locals = None
+        self.locals_signal.connect(self.set_locals)
 
         self.textQVBoxLayout = QtWidgets.QHBoxLayout()
         self.account_name_label = QtWidgets.QLabel()
@@ -109,13 +114,21 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
 
     def open_settings(self):
         path = fr'{os.path.dirname(os.path.realpath(__file__))}\profiles\{self.name}'
-
-        dlg = SettingsDialog(account_name=self.name, _queue=self._queue, logger=self.logger)
+        show_console = main_config.config_data["python_console"]
+        dlg = SettingsDialog(account_name=self.name,
+                             _queue=self._queue,
+                             logger=self.logger,
+                             _locals=self.locals,
+                             show_console=show_console
+                             )
         dlg.show()
         dlg.exec()
 
     def setTextUp(self, text):
         self.account_name_label.setText(text)
+
+    def set_locals(self, _locals: dict[str, Any]):
+        self.locals = _locals
 
 
 class QListAccountsWidgetItem(QtWidgets.QListWidgetItem):
@@ -425,7 +438,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         if item.status is not True:
             _queue = queue.Queue()
-            t = threading.Thread(target=self.run_browser, args=(account_name, _queue, logger))
+            locals_signal = item.widget.locals_signal
+            t = threading.Thread(target=self.run_browser, args=(account_name, _queue, logger, locals_signal))
             item.thread = t
             item.widget._queue = _queue
             t.start()
@@ -434,7 +448,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.show_warning("This browser is already running")
 
     @staticmethod
-    def run_browser(name: str, _queue: queue.Queue, logger: logging.Logger):
+    def run_browser(name: str, _queue: queue.Queue, logger: logging.Logger, set_locals_signal: pyqtSignal):
         path = os.path.dirname(os.path.realpath(__file__))
         logger.info(f"Log file created for {name}")
         try:
@@ -443,7 +457,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             logging.error(f"Passwords decrypt error: {e}")
 
         logger.info(f"Browser {name} started")
-        WebBrowser(base_path=path, account_name=name, logger=logger, _queue=_queue, main_config=main_config)
+        WebBrowser(base_path=path, account_name=name, logger=logger, _queue=_queue, main_config=main_config,
+                   set_locals_signal=set_locals_signal)
 
     @staticmethod
     def setup_logger_for_thread(path, thread_name) -> logging.Logger:

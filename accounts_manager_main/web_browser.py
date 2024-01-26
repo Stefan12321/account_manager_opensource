@@ -6,16 +6,18 @@ import screeninfo
 import selenium
 import undetected_chromedriver
 import undetected_chromedriver as uc
+from PyQt5.QtCore import pyqtSignal
 from selenium.common import WebDriverException
 
 from html_editor.main import create_html
 from user_agents.main import get_user_agent
-from .serializer import Config
+from .serializer import Config, MainConfig
 
 
 class WebBrowser:
     def __init__(self, base_path, account_name,
-                 logger, _queue: queue.Queue, main_config: Config, start_browser=True):
+                 logger, _queue: queue.Queue, main_config: MainConfig, set_locals_signal: pyqtSignal, start_browser=True):
+        self.set_locals_signal = set_locals_signal
         self.logger = logger
         self.base_dir = base_path
         self.path = fr"{self.base_dir}\profiles\{account_name}"
@@ -66,11 +68,11 @@ class WebBrowser:
     def start_undetected_chrome(self):
         driver = self._prepare_undetected_chrome()
         self.open_onload_pages(driver)
+        self.set_locals_signal.emit(locals())
         try:
             while self.is_driver_alive(driver):
                 try:
                     signal = self._queue.get(timeout=1)
-
                     command = signal[0]
                     data = signal[1]
                     self.logger.info(f"Signal received: {command}")
