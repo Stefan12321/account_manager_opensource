@@ -421,8 +421,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             open_error_dialog(f"Account with name {account_name} is already exist. Try different name")
 
     def create_profile(self, profile_name: str):
-        self.create_list_item(profile_name)
-        self.browsers_names.append(profile_name)
         path = fr"{os.path.dirname(os.path.realpath(__file__))}\profiles\{profile_name}"
         os.makedirs(path)
         user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
@@ -430,6 +428,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             'user-agent': user_agent_
         }
         serialize(fr'{path}\config.json', data)
+        self.create_list_item(profile_name)
+        self.browsers_names.append(profile_name)
+
 
     def item_click(self, item: QListAccountsWidgetItem):
         item_widget = self.listWidget.itemWidget(item)
