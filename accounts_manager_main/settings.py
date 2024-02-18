@@ -27,7 +27,8 @@ class QlistExtensionsWidgetItem(QtWidgets.QListWidgetItem):
 
 
 class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
-    def __init__(self, _queue: queue.Queue, logger: logging.Logger, _locals: dict[str, Any], show_console: bool, parent=None,
+    def __init__(self, _queue: queue.Queue, logger: logging.Logger, _locals: dict[str, Any], show_console: bool,
+                 parent=None,
                  account_name=""):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
@@ -92,10 +93,13 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         if show_console:
             console = PythonConsole(locals=self.locals)
             console.eval_in_thread()
+            console_label = QtWidgets.QLabel()
+            console_label.setText("Python console")
+            self.verticalLayout_2.addWidget(console_label)
             self.verticalLayout_2.addWidget(console)
         else:
-            spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
-            self.verticalLayout_2.addItem(spacerItem)
+            spacer_item = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+            self.verticalLayout_2.addItem(spacer_item)
         self._add_functions()
         self._private_buttons()
         self._fill_fields()
@@ -223,7 +227,8 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
                                                           isinstance(child, QtWidgets.QLineEdit)]})
         return settings
 
-    def read_tooltips(self, path=f"{base_dir}/tooltips.csv") -> dict:
+    @staticmethod
+    def read_tooltips(path=f"{base_dir}/tooltips.csv") -> dict:
         with open(path, 'r', encoding='utf-8') as csvfile:
             # Create a DictReader object
             csvreader = csv.DictReader(csvfile)
@@ -263,30 +268,33 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
                     self.add_list_field(key, key_data, tooltip)
 
     def add_list_field(self, field_name: str, field_data: list, tooltip=""):
-        horizontal_layout_3 = QtWidgets.QHBoxLayout()
-        horizontal_layout_3.setObjectName("horizontalLayout_3")
-        scroll_area = QtWidgets.QScrollArea(self.dialog)
-        scroll_area.setLocale(QtCore.QLocale(QtCore.QLocale.Russian, QtCore.QLocale.Ukraine))
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setObjectName("scrollArea")
-        scroll_area.setMinimumHeight(100)
-        scroll_area_widget_contents = QtWidgets.QWidget()
-        scroll_area_widget_contents.setGeometry(QtCore.QRect(0, 0, 346, 67))
-        scroll_area_widget_contents.setObjectName(field_name)
-        vertical_layout_2 = QtWidgets.QVBoxLayout(scroll_area_widget_contents)
-        vertical_layout_2.setObjectName("verticalLayout_2")
+        label = QtWidgets.QLabel(self.dialog)
+        label.setObjectName(f"{field_name}_label")
+        label.setText(field_name.replace("_", " "))
+        vertical_layout = QtWidgets.QVBoxLayout()
+        vertical_layout.setObjectName(f"horizontalLayout_{self.col}")
+        vertical_layout.addWidget(label)
+        widget_contents = QtWidgets.QFrame()
+        widget_contents.setGeometry(QtCore.QRect(0, 0, 346, 67))
+        widget_contents.setObjectName(field_name)
+        widget_contents.setStyleSheet("""
+        QFrame{
+        border: 1px solid gray;
+        }
+        """)
+        vertical_layout_1 = QtWidgets.QVBoxLayout(widget_contents)
+        vertical_layout_1.setObjectName(f"verticalLayout_{self.row}")
 
         horizontal_layout_2 = QtWidgets.QHBoxLayout()
-        horizontal_layout_2.setObjectName("horizontalLayout_2")
+        horizontal_layout_2.setObjectName(f"horizontalLayout_2_{self.row}")
         vertical_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Minimum,
                                                      QtWidgets.QSizePolicy.Expanding)
         horizontal_spacer_item = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding,
                                                        QtWidgets.QSizePolicy.Minimum)
 
-        vertical_layout_2.addLayout(horizontal_layout_2)
+        vertical_layout_1.addLayout(horizontal_layout_2)
 
-        scroll_area.setWidget(scroll_area_widget_contents)
-        horizontal_layout_3.addWidget(scroll_area)
+        vertical_layout.addWidget(widget_contents)
         push_button_add_page = QtWidgets.QPushButton(self.dialog)
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Maximum, QtWidgets.QSizePolicy.Maximum)
         size_policy.setHorizontalStretch(0)
@@ -298,21 +306,21 @@ class MainSettings(Ui_main_settings_dialog, QtWidgets.QDialog):
         push_button_add_page.setObjectName("pushButton_add_page")
 
         horizontal_layout_4 = QtWidgets.QHBoxLayout()
-        horizontal_layout_4.setObjectName("horizontalLayout_4")
+        horizontal_layout_4.setObjectName(f"horizontalLayout_4_{self.row}")
 
         horizontal_layout_4.addItem(horizontal_spacer_item)
         horizontal_layout_4.addWidget(push_button_add_page)
         push_button_add_page.setText("+")
 
-        self.add_to_scroll_layout(horizontal_layout_3)
+        self.add_to_scroll_layout(vertical_layout)
         for item in field_data:
-            self.add_one_page_onload(item, scroll_area_widget_contents, vertical_layout_2)
+            self.add_one_page_onload(item, widget_contents, vertical_layout_1)
 
         push_button_add_page.clicked.connect(
-            lambda: self.add_one_page_onload("", scroll_area_widget_contents, vertical_layout_2))
-        self.fields.append(scroll_area_widget_contents)
-        vertical_layout_2.addLayout(horizontal_layout_4)
-        vertical_layout_2.addItem(vertical_spacer_item)
+            lambda: self.add_one_page_onload("", widget_contents, vertical_layout_1))
+        self.fields.append(widget_contents)
+        vertical_layout_1.addLayout(horizontal_layout_4)
+        vertical_layout_1.addItem(vertical_spacer_item)
 
     def add_string_field(self, field_name: str, field_data: str, tooltip=""):
         label = QtWidgets.QLabel(self.dialog)
