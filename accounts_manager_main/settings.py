@@ -42,7 +42,7 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
             self.verticalLayout.addWidget(self.CheckGSButton)
             self.CheckGSButton.setText("CheckGS")
 
-        self.items = []
+        self.extension_items = []
         self.name = account_name
         self.config = self.setup_config()
         self.main_config = self.setup_main_config()
@@ -53,7 +53,7 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
             item.setText(text)
             item.extension_name = extension_name
             item.setCheckState(QtCore.Qt.Unchecked)
-            self.items.append(item)
+            self.extension_items.append(item)
             self.listWidgetExtensions.addItem(item)
         self.default_values = {
             "extensions": {},
@@ -130,7 +130,7 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
         for field in self.fields:
             field["field"].setText(field["data_from_config"])
         extensions = self.config.get_data_by_key("extensions", self.default_values["extensions"])
-        for item in self.items:
+        for item in self.extension_items:
             if item.extension_name in extensions and extensions[item.extension_name] is True:
                 item.setCheckState(QtCore.Qt.Checked)
 
@@ -140,7 +140,8 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
             new_data = field["field"].text()
             if new_data != field["data_from_config"]:
                 config_update.update({field["name"]: new_data})
-        config_update.update({item.extension_name: item.checkState() == QtCore.Qt.Checked for item in self.items})
+        config_update.update({"extensions": {item.extension_name: item.checkState() == QtCore.Qt.Checked for item in
+                                             self.extension_items}})
         self.config.update(config_update)
 
     def setup_config(self) -> Config:

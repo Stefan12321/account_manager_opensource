@@ -22,7 +22,7 @@ def build():
 
     ]
 
-    includes = ['extension', 'icons', './settings.json', './win_versions.json',
+    includes = ['icons', './settings.json', './win_versions.json',
                 'chrome_versions.json', "./tooltips.csv"]
 
     packages = ["os", "threading", "time", "PyQt5", "selenium", "json", "user_agents", "undetected_chromedriver",
@@ -45,6 +45,7 @@ def build():
     )
 
     os.makedirs(f'{BUILD_FOLDER}/profiles')
+    os.makedirs(f'{BUILD_FOLDER}/extension')
     os.makedirs(f'{BUILD_FOLDER}/logs')
     os.makedirs(f'{BUILD_FOLDER}/logs/Main_log')
     conf = Config(f"{BUILD_FOLDER}/settings.json")
