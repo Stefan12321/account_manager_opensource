@@ -37,6 +37,7 @@ class WebBrowser:
             driver = uc.Chrome(options=options, version_main=self.version_main)
             if self.config_main.config_data["set_random_window_size"]:
                 self.set_random_window_size(driver)
+            self.open_onload_pages(driver)
             return driver
         except Exception as e:
             self.logger.error(e)
@@ -67,7 +68,7 @@ class WebBrowser:
 
     def start_undetected_chrome(self):
         driver = self._prepare_undetected_chrome()
-        self.open_onload_pages(driver)
+
         self.set_locals_signal.emit(locals())
         try:
             while self.is_driver_alive(driver):

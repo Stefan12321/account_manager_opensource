@@ -128,7 +128,7 @@ class SettingsDialog(Ui_settings_dialog, QtWidgets.QDialog):
 
     def _fill_fields(self):
         for field in self.fields:
-            field["field"].setText(field["data_from_config"])
+            field["field"].setText(str(field["data_from_config"]))
         extensions = self.config.get_data_by_key("extensions", self.default_values["extensions"])
         for item in self.extension_items:
             if item.extension_name in extensions and extensions[item.extension_name] is True:
