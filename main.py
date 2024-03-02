@@ -5,6 +5,7 @@ from typing import List, Callable, Any
 
 import requests
 from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QMovie
 from PyQt5.QtWidgets import QMessageBox
 
 freeze_support()
@@ -78,10 +79,15 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
         self._queue = None
         self.locals = None
         self.locals_signal.connect(self.set_locals)
-
+        self.movie = QMovie("./icons/spiner64.gif")
         self.textQVBoxLayout = QtWidgets.QHBoxLayout()
         self.account_name_label = QtWidgets.QLabel()
         self.running_status_label = QtWidgets.QLabel()
+        self.running_status_label.setGeometry(QtCore.QRect(0, 0, 64, 64))
+        self.running_status_label.setMaximumSize(QtCore.QSize(64, 64))
+        self.running_status_label.setVisible(False)
+        self.running_status_label.setMovie(self.movie)
+        self.movie.start()
         self.pushButtonSettings = QtWidgets.QPushButton()
         size_policy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed)
         size_policy.setHorizontalStretch(0)
@@ -129,6 +135,15 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
 
     def set_locals(self, _locals: dict[str, Any]):
         self.locals = _locals
+
+    def is_animation_running(self) -> bool:
+        return self.running_status_label.isVisible()
+
+    def show_animation(self):
+        self.running_status_label.setVisible(True)
+
+    def hide_animation(self):
+        self.running_status_label.setVisible(False)
 
 
 class QListAccountsWidgetItem(QtWidgets.QListWidgetItem):
@@ -431,7 +446,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.create_list_item(profile_name)
         self.browsers_names.append(profile_name)
 
-
     def item_click(self, item: QListAccountsWidgetItem):
         item_widget = self.listWidget.itemWidget(item)
         account_name = item_widget.name
@@ -500,13 +514,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 try:
                     widget = self.listWidget.itemWidget(i)
                     if i.thread.is_alive():
+                        if not widget.is_animation_running():
+                            widget.show_animation()
+                        # widget.running_status_label.setText('running...')
 
-                        widget.running_status_label.setText('running...')
                         # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
                         account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
                         account_widget_item.status = True
                     else:
-                        widget.running_status_label.setText('')
+                        if widget.is_animation_running():
+                            widget.hide_animation()
+                        # widget.running_status_label.setVisible(False)
+                        # widget.running_status_label.setText('')
                         # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
                         account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
                         account_widget_item.status = False
