@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QMessageBox
 
 freeze_support()
 import os
-from accounts_manager_main.serializer import serialize, deserialize, Config, MainConfig
+from accounts_manager_main.serializer import Serializer, Config, MainConfig
 
 os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
 os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.path.dirname(os.path.realpath(__file__))}/settings.json"
@@ -36,13 +36,13 @@ from zipfile import ZipFile
 from accounts_manager_main.settings import MainSettings
 
 APP_VERSION = "0.65"
-if main_config.config_data["version"] == "opensource":
+if main_config.config_data["version"]["values"]["opensource"] is True:
     from accounts_manager_main.web_browser import WebBrowser
     from accounts_manager_main.settings import SettingsDialog
 
     APP_VERSION += " opensource"
 
-elif main_config.config_data["version"] == "private":
+elif main_config.config_data["version"]["values"]["private"] is True:
     try:
         from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
         from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
@@ -119,7 +119,6 @@ class QWidgetOneAccountLine(QtWidgets.QWidget):
         ''')
 
     def open_settings(self):
-        path = fr'{os.path.dirname(os.path.realpath(__file__))}\profiles\{self.name}'
         show_console = main_config.config_data["python_console"]
         dlg = SettingsDialog(account_name=self.name,
                              _queue=self._queue,
@@ -442,7 +441,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         data = {
             'user-agent': user_agent_
         }
-        serialize(fr'{path}\config.json', data)
+        Serializer.serialize(fr'{path}\config.json', data)
         self.create_list_item(profile_name)
         self.browsers_names.append(profile_name)
 

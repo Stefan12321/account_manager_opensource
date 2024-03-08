@@ -55,7 +55,7 @@ class Config(Serializer):
         except PermissionError:
             self.serialize({}, self.path)
 
-    def update(self, data: dict) -> bool:
+    def update(self, data: dict, path=None) -> bool:
         resp = super().update(data, self.path)
         if resp:
             self.config_data = self.deserialize(self.path)
@@ -101,16 +101,16 @@ class MainConfig(Serializer):
                 self.serialize({}, path)
 
     def _try_to_read_private_config(self):
-        if self.config_data["version"] == "private":
+        if self.config_data["version"]["values"]["private"] is True:
             try:
                 self.paths.append(
                     f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part/settings.json')
                 self._read_configs()
             except (FileNotFoundError, PermissionError):
                 logging.error("You can't use this version of app")
-                self.update({"version": "opensource"})
+                self.update({"version": {"opensource": True, "private": False}})
 
-    def update(self, data: dict) -> bool:
+    def update(self, data: dict, path=None) -> bool:
         for path in self.paths:
             data_to_update = {}
             for key in data.keys():
@@ -119,8 +119,7 @@ class MainConfig(Serializer):
             resp = super().update(data_to_update, path)
             if resp:
                 self.config_paths[path] = self.deserialize(path)
-            else:
-                return resp
+
         return resp
 
     def get_data_by_key(self, key: str, default_value=None):
@@ -131,29 +130,3 @@ class MainConfig(Serializer):
             self.update({key: default_value})
             return default_value
 
-
-def serialize(path, data: dict):
-    """
-
-    :param path: path to config.json
-    :param data: dict of settings
-    :return: None
-    """
-    with open(path, 'w') as f:
-        try:
-            json.dump(data, f)
-            print(f"Serialized data: {data}")
-        except Exception as e:
-            print(e)
-
-
-def deserialize(path) -> dict:
-    """
-
-    :param path: path to config.json
-    :return: list of deserialized data from config.json
-    """
-    with open(path, 'r') as f:
-        data = json.load(f)
-
-    return data
