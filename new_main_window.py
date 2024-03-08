@@ -9,7 +9,7 @@ from PyQt5.QtGui import QIcon, QPainter, QImage, QBrush, QColor, QFont, QDesktop
 from PyQt5.QtWidgets import QApplication, QFrame, QStackedWidget, QHBoxLayout, QLabel, QListWidgetItem, QLayout, \
     QDesktopWidget, QToolTip
 
-from qfluentwidgets import (NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
+from qfluentwidgets import (StyleSheetBase, NavigationInterface, NavigationItemPosition, NavigationWidget, MessageBox,
                             isDarkTheme, setTheme, Theme, setThemeColor, qrouter, FluentWindow, NavigationAvatarWidget,
                             ListWidget, CheckBox, LineEdit, BodyLabel, SingleDirectionScrollArea, ToolButton,
                             PrimaryPushButton)
@@ -17,14 +17,15 @@ from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
 from accounts_manager_main.serializer import MainConfig
-from app.view.about_view import About
-from app.view.browsers_view import BrowserListWidget
-from app.view.settings_view import MainSettings
-
 os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
 os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.path.dirname(os.path.realpath(__file__))}/settings.json"
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 APP_VERSION = "0.65"
+from app.view.browsers_view import BrowserListWidget
+from app.view.settings_view import MainSettings
+
+
+
 
 class Window(FramelessWindow):
 
@@ -44,8 +45,7 @@ class Window(FramelessWindow):
 
         # create sub interface
         self.browser_list_Interface = BrowserListWidget(self)
-        self.settingInterface = MainSettings(main_config, self)
-        self.about = About(APP_VERSION, self)
+        self.settingInterface = MainSettings(APP_VERSION, main_config, self)
 
         # initialize layout
         self.initLayout()
@@ -68,7 +68,7 @@ class Window(FramelessWindow):
 
         self.addSubInterface(self.browser_list_Interface, FIF.GLOBE, 'Browsers')
 
-        self.addSubInterface(self.about, FIF.INFO, 'About', NavigationItemPosition.BOTTOM)
+        # self.addSubInterface(self.about, FIF.INFO, 'About', NavigationItemPosition.BOTTOM)
         self.addSubInterface(self.settingInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM)
 
         # !IMPORTANT: don't forget to set the default route key if you enable the return button
@@ -78,7 +78,7 @@ class Window(FramelessWindow):
         # self.navigationInterface.setExpandWidth(300)
 
         self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
-        self.stackWidget.setCurrentIndex(0)
+        self.stackWidget.setCurrentIndex(2)
 
         # always expand
         # self.navigationInterface.setCollapsible(False)
@@ -127,17 +127,6 @@ class Window(FramelessWindow):
         # !IMPORTANT: This line of code needs to be uncommented if the return button is enabled
         # qrouter.push(self.stackWidget, widget.objectName())
 
-    def showMessageBox(self):
-        w = MessageBox(
-            '支持作者🥰',
-            '个人开发不易，如果这个项目帮助到了您，可以考虑请作者喝一瓶快乐水🥤。您的支持就是作者开发和维护项目的动力🚀',
-            self
-        )
-        w.yesButton.setText('来啦老弟')
-        w.cancelButton.setText('下次一定')
-
-        if w.exec():
-            QDesktopServices.openUrl(QUrl("https://afdian.net/a/zhiyiYo"))
 
 
 if __name__ == '__main__':

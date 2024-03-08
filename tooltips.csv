@@ -1,8 +1,11 @@
-Setting,ToolTip
-chrome_version,"Версія GoogleChrome, що встановлений на комп'ютері"
-debug,
-default_new_tab,Адреса яка знаходиться по замовчуванню в налаштування кожного аккаунта в рядку Open new tab with url
-onload_pages,Сторінки які автоматично завантажуються коли браузер запускається
-check_for_updates,Перевіряти оновлення застосунку при старті
-change_location,Міняти геолокацію браузера (працює тільки на вікні яке відкрито за допомогою Open new tab with url)
-set_random_window_size,При запуску браузера встановлювати випадковий розмір вікна
+Setting,ToolTip,Icon
+chrome_version,"Версія GoogleChrome, що встановлений на комп'ютері",GLOBE
+default_new_tab,Адреса яка знаходиться по замовчуванню в налаштування кожного аккаунта в рядку Open new tab with url,HOME
+onload_pages,Сторінки які автоматично завантажуються коли браузер запускається,LAYOUT
+check_for_updates,Перевіряти оновлення застосунку при старті,UPDATE
+change_location,Міняти геолокацію браузера (працює тільки на вікні яке відкрито за допомогою Open new tab with url),VIEW
+set_random_window_size,При запуску браузера встановлювати випадковий розмір вікна,ZOOM
+accounts_tooltips,Показувати коротку інформацію про профіль при наведенні на нього курсором,LABEL
+python_console,Додати python консоль в налаштування коного профілю,CODE
+debug,Режим відлагоджування,DEVELOPER_TOOLS
+version,Версія застосунку (opensource або private),INFO
