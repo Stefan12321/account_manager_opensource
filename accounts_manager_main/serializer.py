@@ -1,6 +1,8 @@
 import json
 import logging
 import os
+import pathlib
+import shutil
 from typing import List
 
 
@@ -53,6 +55,9 @@ class Config(Serializer):
             os.makedirs(self.path)
             self.serialize({}, self.path)
         except PermissionError:
+            path = pathlib.Path(self.path)
+            if path.is_dir():
+                shutil.rmtree(path)
             self.serialize({}, self.path)
 
     def update(self, data: dict, path=None) -> bool:
@@ -111,14 +116,14 @@ class MainConfig(Serializer):
                 self.update({"version": {"opensource": True, "private": False}})
 
     def update(self, data: dict, path=None) -> bool:
-        for path in self.paths:
+        for _path in self.paths:
             data_to_update = {}
             for key in data.keys():
-                if key in self.config_paths[path]:
+                if key in self.config_paths[_path]:
                     data_to_update[key] = data[key]
-            resp = super().update(data_to_update, path)
+            resp = super().update(data_to_update, _path)
             if resp:
-                self.config_paths[path] = self.deserialize(path)
+                self.config_paths[_path] = self.deserialize(_path)
 
         return resp
 
