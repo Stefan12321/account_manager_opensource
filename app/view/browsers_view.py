@@ -1,91 +1,75 @@
 import logging
 import os
+import queue
 import shutil
 import threading
+import time
 import zipfile
-from typing import Any, List, Callable
+from typing import List, Callable
 
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import pyqtSignal, Qt
-from PyQt5.QtGui import QIcon, QMovie
-from PyQt5.QtWidgets import QHBoxLayout, QListWidgetItem, QWidget, QVBoxLayout
-from qfluentwidgets import ListWidget, CheckBox, FluentIcon
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout
+from qfluentwidgets import ListWidget, setCustomStyleSheet
 
-from accounts_manager_main.serializer import Config, MainConfig, Serializer
-from accounts_manager_main.settings import SettingsDialog
+from accounts_manager_main import serializer
+from accounts_manager_main.serializer import MainConfig, Serializer
+from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
+from app.components.delete_accounts_dialog import DeleteAccountDialog
 from app.view.base_view import Widget
-from app.components.one_accout_line_widget import Ui_Form
+from app.components.create_account_dialog import CreateAccountDialog
 from app.components.accounts_list_tools_widget import Ui_Form as accounts_list_tools_ui
 from dialogs.message_dialogs import open_error_dialog
-from main import CreateAccountDialog, ProgressBarDialog
+from main import ProgressBarDialog
 from password_decryptor.passwords_decryptor import do_decrypt
 from user_agents.main import get_user_agent
+
+main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
+
+if main_config.config_data["version"]["values"]["opensource"] is True:
+    from accounts_manager_main.web_browser import WebBrowser
+
+    serializer.APP_VERSION += " opensource"
+
+elif main_config.config_data["version"]["values"]["private"] is True:
+    try:
+        from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
+        from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
+
+        serializer.APP_VERSION += " private"
+    except PermissionError:
+        logging.error("You can't use this version of app")
+        raise PermissionError
+else:
+    open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
+    logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
+
+
+class StyleSheet:
+    """ Style sheet  """
+
+    def __init__(self, path: str):
+        self.path = path
+        self.style_sheet = self.__read_stylesheet()
+
+    def __read_stylesheet(self) -> str:
+        with open(self.path, "r") as f:
+            return f.read()
+
+    def __str__(self) -> str:
+        return self.style_sheet
+
+    def __repr__(self) -> str:
+        return self.style_sheet
 
 
 class AccountsListToolsWidget(QWidget, accounts_list_tools_ui):
     def __init__(self, parent=None):
         super(AccountsListToolsWidget, self).__init__(parent)
         self.setupUi(self)
-
-
-class QWidgetOneAccountLine(QWidget, Ui_Form):
-    locals_signal = pyqtSignal(dict)
-
-    def __init__(self, main_config: MainConfig, logger: logging.Logger, index: int, parent=None):
-        super(QWidgetOneAccountLine, self).__init__(parent)
-
-        self.index = index
-        self.logger = logger
-        self.main_config = main_config
-        self.name = None
-        self._queue = None
-        self.locals = None
-        self.locals_signal.connect(self.set_locals)
-
-        self.setupUi(self)
-        self.settings_button.setIcon(FluentIcon.SETTING)
-        self.settings_button.clicked.connect(self.open_settings)
-        self.running_ring.stop()
-        self.browser_icon.setIcon(QIcon('app/resource/Google_Chrome_icon.svg'))
-
-    def open_settings(self):
-        show_console = self.main_config.config_data["python_console"]
-        dlg = SettingsDialog(account_name=self.name,
-                             _queue=self._queue,
-                             logger=self.logger,
-                             _locals=self.locals,
-                             show_console=show_console
-                             )
-        dlg.show()
-        dlg.exec()
-
-    def set_account_name(self, name: str):
-        self.name = name
-        self.account_name_label.setText(name)
-
-    def set_locals(self, _locals: dict[str, Any]):
-        self.locals = _locals
-
-    def enterEvent(self, event):
-        self.parent().parent()._setHoverRow(self.index)
-
-
-class QListAccountsWidgetItem(QListWidgetItem):
-    def __init__(self, name: str, widget: QWidgetOneAccountLine, main_config: MainConfig, parent=None, ):
-        super(QListAccountsWidgetItem, self).__init__(parent)
-        self.name = name
-        self.main_config = main_config
-        self.status: bool = False
-        self.thread: threading.Thread or None = None
-        self.widget = widget
-        self.setSizeHint(self.widget.sizeHint())
-        if main_config.config_data["accounts_tooltips"]:
-            self.setToolTips()
-
-    def setToolTips(self):
-        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
-        config = Config(fr"{self.path}\config.json")
-        self.setToolTip(str(config))
+        delete_button_style = StyleSheet("app/resource/dark/delete_button.qss")
+        setCustomStyleSheet(self.delete_button, str(delete_button_style), str(delete_button_style))
 
 
 class BrowserListWidget(Widget):
@@ -112,6 +96,7 @@ class BrowserListWidget(Widget):
         self.vBoxLayout = QVBoxLayout(self)
         self.hBoxLayout = QHBoxLayout()
         self.listWidget = ListWidget()
+        self.listWidget.itemClicked.connect(self.item_click)
 
         self.list_tools = AccountsListToolsWidget()
         self.list_tools.CheckBox.stateChanged.connect(self.set_all_checkbox)
@@ -127,6 +112,8 @@ class BrowserListWidget(Widget):
         self.vBoxLayout.addWidget(self.list_tools)
         self.vBoxLayout.addLayout(self.hBoxLayout)
 
+        self.start_threads_watcher()
+
     def update_item_list(self):
         self.browsers_names = [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
                                if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")]
@@ -138,7 +125,7 @@ class BrowserListWidget(Widget):
     def create_list_item(self, name: str, index: int):
         path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
         logger = self.setup_logger_for_thread(path, name)
-        one_account_line_widget = QWidgetOneAccountLine(self.main_config, logger, index)
+        one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index)
         one_account_line_widget.set_account_name(name)
 
         qlist_item_one_account = QListAccountsWidgetItem(name,
@@ -189,10 +176,10 @@ class BrowserListWidget(Widget):
         progress_bar.exec()
 
     def on_create_profile_btn_click(self):
-        dlg = CreateAccountDialog()
+        dlg = CreateAccountDialog(self)
         dlg.show()
         result = dlg.exec()
-        account_name = dlg.lineEdit.text()
+        account_name = dlg.new_account_line_edit.text()
         if result and account_name not in self.browsers_names:
             self.create_profile(account_name)
         elif account_name in self.browsers_names:
@@ -294,18 +281,21 @@ class BrowserListWidget(Widget):
                     self.progress_filename_signal.emit(file.filename)
                     # print(f"{counter / (length / 100)}%")
         self.progress_exit_signal.emit()
+
     def delete_profiles(self):
         checked_items = self.get_checked_items()
+
         if len(checked_items) > 0:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Warning)
-
-            msg.setText(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}")
-            msg.setWindowTitle("Warning")
-            msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-
-            retval = msg.exec()
-            if retval == 1024:
+            dlg = DeleteAccountDialog(checked_items, self)
+        #     msg = QtWidgets.QMessageBox()
+        #     msg.setIcon(QtWidgets.QMessageBox.Warning)
+        #
+        #     msg.setText(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}")
+        #     msg.setWindowTitle("Warning")
+        #     msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+        #
+            retval = dlg.exec()
+            if retval == 1:
                 self.progress_bar_thread(self.delete_profiles_thread, "Deleting", checked_items)
                 self.update_item_list()
 
@@ -320,6 +310,61 @@ class BrowserListWidget(Widget):
             counter += 1
 
         self.progress_exit_signal.emit()
+
+    def item_click(self, item: QListAccountsWidgetItem):
+        item_widget = self.listWidget.itemWidget(item)
+        account_name = item_widget.name
+        logger = item_widget.logger
+        if item.status is not True:
+            _queue = queue.Queue()
+            locals_signal = item.widget.locals_signal
+            t = threading.Thread(target=self.run_browser, args=(account_name, _queue, logger, locals_signal))
+            item.thread = t
+            item.widget._queue = _queue
+            t.start()
+            logging.info("Thread created")
+        else:
+            self.show_warning("This browser is already running")
+
+    def run_browser(self, name: str, _queue: queue.Queue, logger: logging.Logger, set_locals_signal: pyqtSignal):
+        logger.info(f"Log file created for {name}")
+        try:
+            do_decrypt(fr"{self.base_path}\profiles\{name}")
+        except Exception as e:
+            logging.error(f"Passwords decrypt error: {e}")
+
+        logger.info(f"Browser {name} started")
+        WebBrowser(base_path=self.base_path, account_name=name, logger=logger, _queue=_queue,
+                   main_config=self.main_config,
+                   set_locals_signal=set_locals_signal)
+
+    def start_threads_watcher(self):
+        t = threading.Thread(target=self.threads_watcher)
+        t.start()
+
+    def threads_watcher(self):
+        while True:
+            for i in self.list_item_arr:
+                try:
+                    widget = self.listWidget.itemWidget(i)
+                    if i.thread.is_alive():
+                        if not widget.is_animation_running:
+                            widget.start_animation()
+
+                        # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+                        account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                        account_widget_item.status = True
+                    else:
+                        if widget.is_animation_running:
+                            widget.stop_animation()
+
+                        # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+                        account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                        account_widget_item.status = False
+
+                except AttributeError:
+                    pass
+            time.sleep(1)
 
     @staticmethod
     def setup_logger_for_thread(path, thread_name) -> logging.Logger:
