@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List
 
-
+APP_VERSION = "0.65"
 class Serializer:
 
     def serialize(self, data: dict, path: str) -> None:

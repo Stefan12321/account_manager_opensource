@@ -61,32 +61,33 @@ class MainSettings(Widget):
             self.tr(""), self.scrollWidget)
         self.lists_group = SettingCardGroup(
             self.tr(""), self.scrollWidget)
-        self.save_group = SettingCardGroup(
-            self.tr("Save"), self.scrollWidget)
+        self.about_group = SettingCardGroup(
+            self.tr("About"), self.scrollWidget)
         self.add_settings_fields(self.main_config.config_data)
         self.expandLayout.addWidget(self.lists_group)
         self.expandLayout.addWidget(self.lines_group)
         self.expandLayout.addWidget(self.checkbox_group)
-        self.expandLayout.addWidget(self.save_group)
+        self.expandLayout.addWidget(self.about_group)
 
         self.save_card = PrimaryPushSettingCard(
             self.tr('Save'),
             FluentIcon.SAVE,
             self.tr('Save settings'),
             "",
-            self.save_group
+            self.about_group
         )
         self.save_card.button.clicked.connect(lambda: self.update_settings(self.main_config.config_data))
-        self.save_group.addSettingCard(self.save_card)
+        # self.save_group.addSettingCard(self.save_card)
         self.about_card = PrimaryPushSettingCard(
             self.tr('Check for updates'),
             FluentIcon.INFO,
             self.tr('About'),
             f"@ Copyrighting 2024, Stefan. Version: {self.app_version}",
-            self.save_group
+            self.about_group
         )
         self.about_card.button.clicked.connect(self.check_for_updates)
-        self.save_group.addSettingCard(self.about_card)
+        self.about_group.addSettingCard(self.about_card)
+        self.verticalLayout.addWidget(self.save_card)
 
     def add_to_scroll_layout(self, layout: QLayout):
         self.scrollLayout.addLayout(layout)

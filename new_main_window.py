@@ -6,7 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QStackedWidget, QHBoxLayout
 
-from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTheme, setTheme, Theme
+from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTheme, setTheme, Theme, setThemeColor
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
 
@@ -15,10 +15,9 @@ from accounts_manager_main.serializer import MainConfig
 os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
 os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.path.dirname(os.path.realpath(__file__))}/settings.json"
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
-APP_VERSION = "0.65"
 from app.view.browsers_view import BrowserListWidget
 from app.view.settings_view import MainSettings
-
+from accounts_manager_main.serializer import APP_VERSION
 
 class Window(FramelessWindow):
 
@@ -31,8 +30,10 @@ class Window(FramelessWindow):
         if main_config.config_data["theme"]["values"]["Light"] is True:
             setTheme(Theme.LIGHT)
 
+
+
         # change the theme color
-        # setThemeColor('#0078d4')
+        setThemeColor('#8caaee')
 
         self.hBoxLayout = QHBoxLayout(self)
         self.navigationInterface = NavigationInterface(self, showMenuButton=True)
