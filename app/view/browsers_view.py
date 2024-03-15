@@ -17,6 +17,7 @@ from accounts_manager_main import serializer
 from accounts_manager_main.serializer import MainConfig, Serializer
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.delete_accounts_dialog import DeleteAccountDialog
+from app.components.style_sheet import StyleSheet
 from app.view.base_view import Widget
 from app.components.create_account_dialog import CreateAccountDialog
 from app.components.accounts_list_tools_widget import Ui_Form as accounts_list_tools_ui
@@ -44,24 +45,6 @@ elif main_config.config_data["version"]["values"]["private"] is True:
 else:
     open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
     logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
-
-
-class StyleSheet:
-    """ Style sheet  """
-
-    def __init__(self, path: str):
-        self.path = path
-        self.style_sheet = self.__read_stylesheet()
-
-    def __read_stylesheet(self) -> str:
-        with open(self.path, "r") as f:
-            return f.read()
-
-    def __str__(self) -> str:
-        return self.style_sheet
-
-    def __repr__(self) -> str:
-        return self.style_sheet
 
 
 class AccountsListToolsWidget(QWidget, accounts_list_tools_ui):
@@ -93,6 +76,11 @@ class BrowserListWidget(Widget):
 
         self.setObjectName("BrowserListWidget")
 
+        self.__init_layout()
+
+        self.start_threads_watcher()
+
+    def __init_layout(self):
         self.vBoxLayout = QVBoxLayout(self)
         self.hBoxLayout = QHBoxLayout()
         self.listWidget = ListWidget()
@@ -111,8 +99,6 @@ class BrowserListWidget(Widget):
 
         self.vBoxLayout.addWidget(self.list_tools)
         self.vBoxLayout.addLayout(self.hBoxLayout)
-
-        self.start_threads_watcher()
 
     def update_item_list(self):
         self.browsers_names = [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
@@ -189,8 +175,15 @@ class BrowserListWidget(Widget):
         path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"
         os.makedirs(path)
         user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
+        extension_list = os.listdir(fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\extension')
         data = {
-            'user-agent': user_agent_
+            'user-agent': user_agent_,
+            "line_number": "",
+            "proxy": "",
+            "latitude": "",
+            "longitude": "",
+            "extensions": {key: False for key in extension_list},
+            "default_new_tab": main_config.config_data["default_new_tab"]
         }
         s = Serializer()
         s.serialize(data, fr'{path}\config.json')
@@ -287,13 +280,6 @@ class BrowserListWidget(Widget):
 
         if len(checked_items) > 0:
             dlg = DeleteAccountDialog(checked_items, self)
-        #     msg = QtWidgets.QMessageBox()
-        #     msg.setIcon(QtWidgets.QMessageBox.Warning)
-        #
-        #     msg.setText(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}")
-        #     msg.setWindowTitle("Warning")
-        #     msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-        #
             retval = dlg.exec()
             if retval == 1:
                 self.progress_bar_thread(self.delete_profiles_thread, "Deleting", checked_items)

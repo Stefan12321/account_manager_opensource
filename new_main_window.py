@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import QApplication, QStackedWidget, QHBoxLayout
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTheme, setTheme, Theme, setThemeColor
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, StandardTitleBar
+from qframelesswindow.windows import WindowsWindowEffect
 
 from accounts_manager_main.serializer import MainConfig
 
@@ -19,18 +20,18 @@ from app.view.browsers_view import BrowserListWidget
 from app.view.settings_view import MainSettings
 from accounts_manager_main.serializer import APP_VERSION
 
+
 class Window(FramelessWindow):
 
     def __init__(self):
         super().__init__()
         self.setTitleBar(StandardTitleBar(self))
-
+        self.windowEffect = WindowsWindowEffect(self)
+        self.windowEffect.setMicaEffect(self.winId(), isDarkTheme())
         if main_config.config_data["theme"]["values"]["Dark"] is True:
             setTheme(Theme.DARK)
         if main_config.config_data["theme"]["values"]["Light"] is True:
             setTheme(Theme.LIGHT)
-
-
 
         # change the theme color
         setThemeColor('#8caaee')
@@ -82,7 +83,7 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(900, 700)
-        self.setWindowIcon(QIcon('resource/logo.png'))
+        self.setWindowIcon(QIcon('app/resource/logo.svg'))
         self.setWindowTitle('Accounts manager')
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 

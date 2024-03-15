@@ -9,7 +9,7 @@ from Cryptodome.Cipher import AES
 import shutil
 import csv
 
-
+DST_DB = "Loginvault.db"
 def get_secret_key_from_file(path):
     with open(fr'{path}\secret', "rb") as secret_file:
         secret_key = secret_file.read()
@@ -82,7 +82,7 @@ def decrypt_password(ciphertext, secret_key):
 
 
 def get_db_connection(chrome_path_login_db):
-    dst_db = "Loginvault.db"
+    dst_db = DST_DB
     try:
         print(chrome_path_login_db)
         shutil.copy2(chrome_path_login_db, dst_db)
@@ -93,7 +93,7 @@ def get_db_connection(chrome_path_login_db):
         return None
 
 
-def do_decrypt(path):
+def do_decrypt(path: str) -> str:
     CHROME_PATH = path
     passwords = ''
     try:
@@ -109,7 +109,7 @@ def do_decrypt(path):
             if secret_key != "":
                 secret_file.write(secret_key)
             else:
-                raise BaseException("empty secret_key")
+                raise KeyError("empty secret_key")
         with open(fr'{path}\decrypted_password.csv', mode='w', newline='', encoding='utf-8') as decrypt_password_file:
             csv_writer = csv.writer(decrypt_password_file, delimiter=',')
             csv_writer.writerow(["index", "url", "username", "password"])
@@ -142,7 +142,62 @@ def do_decrypt(path):
                     cursor.close()
                     conn.close()
                     # Delete temp login db
-                    os.remove("Loginvault.db")
+                    os.remove(DST_DB)
+                    return passwords
+    except Exception as e:
+        print(f"[ERR] {str(e)}")
+
+
+def do_decrypt_dict(path: str) -> dict:
+    CHROME_PATH = path
+    passwords = {}
+    try:
+        # Create Dataframe to store passwords
+        secret_key = get_secret_key(path)
+        if secret_key == 'error':
+            print(path)
+            key = get_secret_key_from_file(path)
+            write_secret_key_to_file(path, key)
+            secret_key = get_secret_key(path)
+
+        with open(fr'{path}\secret', "wb") as secret_file:
+            if secret_key != "":
+                secret_file.write(secret_key)
+            else:
+                raise KeyError("empty secret_key")
+        with open(fr'{path}\decrypted_password.csv', mode='w', newline='', encoding='utf-8') as decrypt_password_file:
+            csv_writer = csv.writer(decrypt_password_file, delimiter=',')
+            csv_writer.writerow(["index", "url", "username", "password"])
+            # (1) Get secret key
+
+            print(f"secret key: {secret_key}")
+            # Search user profile or default folder (this is where the encrypted login password is stored)
+            folders = [element for element in os.listdir(CHROME_PATH) if
+                       re.search("^Profile*|^Default$", element) != None]
+            for folder in folders:
+                # (2) Get ciphertext from sqlite database
+                chrome_path_login_db = os.path.normpath(r"%s\%s\Login Data" % (CHROME_PATH, folder))
+                conn = get_db_connection(chrome_path_login_db)
+                if (secret_key and conn):
+                    cursor = conn.cursor()
+                    cursor.execute("SELECT origin_url, username_value, password_value FROM logins")
+                    for index, login in enumerate(cursor.fetchall()):
+                        url = login[0]
+                        username = login[1]
+                        ciphertext = login[2]
+                        if (url != "" and username != "" and ciphertext != ""):
+                            # (3) Filter the initialisation vector & encrypted password from ciphertext
+                            # (4) Use AES algorithm to decrypt the password
+                            decrypted_password = decrypt_password(ciphertext, secret_key)
+                            passwords.update({url: {"username": username, "password": decrypted_password}})
+
+                            # (5) Save into CSV
+                            csv_writer.writerow([index, url, username, decrypted_password])
+                    # Close database connection
+                    cursor.close()
+                    conn.close()
+                    # Delete temp login db
+                    os.remove(DST_DB)
                     return passwords
     except Exception as e:
         print(f"[ERR] {str(e)}")
