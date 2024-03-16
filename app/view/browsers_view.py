@@ -15,6 +15,7 @@ from qfluentwidgets import ListWidget, setCustomStyleSheet
 
 from accounts_manager_main import serializer
 from accounts_manager_main.serializer import MainConfig, Serializer
+from app.common.logger import setup_logger_for_thread
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.delete_accounts_dialog import DeleteAccountDialog
 from app.components.style_sheet import StyleSheet
@@ -110,7 +111,7 @@ class BrowserListWidget(Widget):
 
     def create_list_item(self, name: str, index: int):
         path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
-        logger = self.setup_logger_for_thread(path, name)
+        logger = setup_logger_for_thread(path, name)
         one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index)
         one_account_line_widget.set_account_name(name)
 
@@ -351,32 +352,3 @@ class BrowserListWidget(Widget):
                 except AttributeError:
                     pass
             time.sleep(1)
-
-    @staticmethod
-    def setup_logger_for_thread(path, thread_name) -> logging.Logger:
-        # Create a logger for the thread
-        logger = logging.getLogger(thread_name)
-        logger.setLevel(logging.INFO)
-
-        # Create a file handler to write log messages to a file
-        log_file = fr"{path}\logs\{thread_name}.log"
-        file_handler = logging.FileHandler(log_file)
-        file_handler.setLevel(logging.INFO)
-
-        # Create a stream handler that displays logs in the terminal
-        stream_handler = logging.StreamHandler()
-        stream_handler.setLevel(logging.INFO)
-
-        # Create a formatter to specify the log message format
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-
-        file_handler.setFormatter(formatter)
-        stream_handler.setFormatter(formatter)
-
-        # Add the file handler to the logger
-        logger.addHandler(file_handler)
-        logger.addHandler(stream_handler)
-
-        # Set the logger as the default logger for the thread
-        # logging.root = logger
-        return logger

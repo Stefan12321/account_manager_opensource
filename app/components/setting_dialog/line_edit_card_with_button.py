@@ -1,3 +1,5 @@
+from typing import Callable
+
 from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout
 from qfluentwidgets import CardWidget, BodyLabel, LineEdit, PushButton
 
@@ -28,5 +30,8 @@ class LineEditCardWithButton(CardWidget):
     def set_data(self, data: str):
         self.line_edit.setText(data)
 
-    def get_date(self) -> str:
+    def get_data(self) -> str:
         return self.line_edit.text()
+
+    def connect_button(self, func: Callable):
+        self.button.clicked.connect(func)

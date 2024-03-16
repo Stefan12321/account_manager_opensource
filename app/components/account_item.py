@@ -48,7 +48,9 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.setToolTip(str(config))
 
     def open_settings(self):
-        dlg = SettingsDialog(main_config=self.main_config,
+        dlg = SettingsDialog(_queue=self._queue,
+                             logger=self.logger,
+                             main_config=self.main_config,
                              account_name=self.name,
                              browser_locals=self.locals)
         dlg.show()

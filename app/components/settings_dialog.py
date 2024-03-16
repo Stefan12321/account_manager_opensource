@@ -1,4 +1,6 @@
+import logging
 import os
+import queue
 from ctypes.wintypes import MSG, LPRECT
 from ctypes import cast
 
@@ -26,11 +28,14 @@ from password_decryptor.passwords_decryptor import do_decrypt_dict
 class SettingsDialog(QDialog):
     BORDER_WIDTH = 5
 
-    def __init__(self, main_config: MainConfig, account_name: str, browser_locals, parent=None):
+    def __init__(self, _queue: queue.Queue, logger: logging.Logger, main_config: MainConfig, account_name: str,
+                 browser_locals, parent=None):
 
         super().__init__(parent)
         self.locals = browser_locals
         self.account_name = account_name
+        self.logger = logger
+        self._queue = _queue
         self.path = f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles/{self.account_name}'
         self.passwords = do_decrypt_dict(self.path)
         self.config = Config(f'{self.path}/config.json')
@@ -58,12 +63,17 @@ class SettingsDialog(QDialog):
         self.config.update(data)
 
     def _fill_fields(self):
-        self.user_agent_card.set_data(self.config.config_data["user-agent"] if "user-agent" in self.config.config_data else "")
-        self.extensions_card.set_data(self.config.config_data["extensions"] if "extensions" in self.config.config_data else [])
-        self.open_in_new_tab_card.set_data(str(self.config.config_data["default_new_tab"]) if "default_new_tab" in self.config.config_data else "")
+        self.user_agent_card.set_data(
+            self.config.config_data["user-agent"] if "user-agent" in self.config.config_data else "")
+        self.extensions_card.set_data(
+            self.config.config_data["extensions"] if "extensions" in self.config.config_data else [])
+        self.open_in_new_tab_card.set_data(
+            str(self.config.config_data["default_new_tab"]) if "default_new_tab" in self.config.config_data else "")
         self.passwords_card.set_data(self.passwords if self.passwords else {})
-        self.longitude_card.set_data(self.config.config_data["longitude"] if "longitude" in self.config.config_data else "")
-        self.latitude_card.set_data(self.config.config_data["latitude"] if "latitude" in self.config.config_data else "")
+        self.longitude_card.set_data(
+            self.config.config_data["longitude"] if "longitude" in self.config.config_data else "")
+        self.latitude_card.set_data(
+            self.config.config_data["latitude"] if "latitude" in self.config.config_data else "")
 
     def _init_layout(self):
         self.vBoxLayout = QVBoxLayout(self)
@@ -75,6 +85,7 @@ class SettingsDialog(QDialog):
 
         self.extensions_card = ListWidgetCard("Extensions")
         self.open_in_new_tab_card = LineEditCardWithButton("Open new tab with url", "OPEN")
+        self.open_in_new_tab_card.connect_button(self.open_new_tab_with_url)
 
         self.latitude_longitude_horizontal_view = QHBoxLayout()
         self.latitude_card = LineEditCard("Latitude")
@@ -250,3 +261,7 @@ class SettingsDialog(QDialog):
         painter.setPen(Qt.NoPen)
         painter.setBrush(self.bg_color)
         painter.drawRoundedRect(self.rect(), 10, 10)
+
+    def open_new_tab_with_url(self):
+        url = self.open_in_new_tab_card.get_data()
+        self._queue.put(["open_in_new_tab", url])

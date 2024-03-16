@@ -1,5 +1,6 @@
 # coding:utf-8
 import csv
+import queue
 from typing import Dict
 
 from PyQt5 import QtWidgets, QtCore
@@ -24,6 +25,7 @@ from app.components.line_edit_setting_card import LineEditSettingCard
 from app.components.list_setting_card import ListSettingsCard
 from app.view.base_view import Widget
 from updater.base import get_latest_release
+
 base_dir = "./"
 
 
@@ -32,7 +34,9 @@ class MainSettings(Widget):
         super().__init__("Settings", parent=parent)
         self.app_version = app_version
         self.main_config = main_config
+        self._init_layout()
 
+    def _init_layout(self):
         self.settingLabel = QLabel("Settings", self)
         self.settingLabel.setObjectName('settingLabel')
         self.settingLabel.move(60, 30)
@@ -50,8 +54,6 @@ class MainSettings(Widget):
         self.scrollArea.setWidget(self.scrollWidget)
         self.scrollArea.setViewportMargins(0, 100, 0, 20)
         self.verticalLayout.addWidget(self.scrollArea)
-        self.col = 0
-        self.row = 0
         self.pages_list = []
         self.pages_dict = {}
         self.fields = []
@@ -77,7 +79,6 @@ class MainSettings(Widget):
             self.about_group
         )
         self.save_card.button.clicked.connect(lambda: self.update_settings(self.main_config.config_data))
-        # self.save_group.addSettingCard(self.save_card)
         self.about_card = PrimaryPushSettingCard(
             self.tr('Check for updates'),
             FluentIcon.INFO,
