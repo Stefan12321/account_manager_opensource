@@ -18,12 +18,12 @@ from accounts_manager_main.serializer import MainConfig, Serializer
 from app.common.logger import setup_logger_for_thread
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.delete_accounts_dialog import DeleteAccountDialog
+from app.components.progress_bar import ProgressBarDialog, FilesProgressBarDialog
 from app.components.style_sheet import StyleSheet
 from app.view.base_view import Widget
 from app.components.create_account_dialog import CreateAccountDialog
 from app.components.accounts_list_tools_widget import Ui_Form as accounts_list_tools_ui
 from dialogs.message_dialogs import open_error_dialog
-from main import ProgressBarDialog
 from password_decryptor.passwords_decryptor import do_decrypt
 from user_agents.main import get_user_agent
 
@@ -152,9 +152,8 @@ class BrowserListWidget(Widget):
         :param args: args for target function
         :return:
         """
-        progress_bar = ProgressBarDialog()
+        progress_bar = FilesProgressBarDialog(title)
         progress_bar.show()
-        progress_bar.setWindowTitle(title)
         self.progress_signal.connect(progress_bar.progress)
         self.progress_exit_signal.connect(progress_bar.exit)
         self.progress_filename_signal.connect(progress_bar.filename)
