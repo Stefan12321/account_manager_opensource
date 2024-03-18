@@ -1,7 +1,7 @@
 import subprocess
 import sys
-from accounts_manager_main.serializer import Config
-from updater.base import get_latest_release, find_path_to_file, download_release, install_release
+from app.common.accounts_manager_main.serializer import Config
+from app.common.updater.base import get_latest_release, find_path_to_file, download_release, install_release
 
 
 def copy_settings():

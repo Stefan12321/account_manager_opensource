@@ -13,8 +13,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout
 from qfluentwidgets import ListWidget, setCustomStyleSheet
 
-from accounts_manager_main import serializer
-from accounts_manager_main.serializer import MainConfig, Serializer
+from app.common.accounts_manager_main import serializer
+from app.common.accounts_manager_main.serializer import MainConfig, Serializer
 from app.common.logger import setup_logger_for_thread
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.warning_dialog import WarningDialog
@@ -23,28 +23,28 @@ from app.components.style_sheet import StyleSheet
 from app.view.base_view import Widget
 from app.components.create_account_dialog import CreateAccountDialog
 from app.components.accounts_list_tools_widget import Ui_Form as accounts_list_tools_ui
-from dialogs.message_dialogs import open_error_dialog
-from password_decryptor.passwords_decryptor import do_decrypt
-from user_agents.main import get_user_agent
+from app.components.warning_dialog import WarningDialog
+from app.common.password_decryptor.passwords_decryptor import do_decrypt
+from app.common.user_agents.main import get_user_agent
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
 if main_config.config_data["version"]["values"]["opensource"] is True:
-    from accounts_manager_main.web_browser import WebBrowser
+    from app.common.accounts_manager_main import WebBrowser
 
     serializer.APP_VERSION += " opensource"
 
 elif main_config.config_data["version"]["values"]["private"] is True:
     try:
         from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
-        from account_manager_private_part.private_settings_dialog import SettingsDialogPrivate as SettingsDialog
+        from account_manager_private_part.app.components.settings_dialog import SettingsDialogPrivate as SettingsDialog
 
         serializer.APP_VERSION += " private"
     except PermissionError:
         logging.error("You can't use this version of app")
         raise PermissionError
 else:
-    open_error_dialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
+    WarningDialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
     logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
 
 
@@ -52,7 +52,7 @@ class AccountsListToolsWidget(QWidget, accounts_list_tools_ui):
     def __init__(self, parent=None):
         super(AccountsListToolsWidget, self).__init__(parent)
         self.setupUi(self)
-        delete_button_style = StyleSheet("app/resource/dark/delete_button.qss")
+        delete_button_style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource/dark/delete_button.qss")
         setCustomStyleSheet(self.delete_button, str(delete_button_style), str(delete_button_style))
 
 
@@ -119,7 +119,7 @@ class BrowserListWidget(Widget):
                                                          one_account_line_widget,
                                                          self.main_config,
                                                          self.listWidget)
-        qlist_item_one_account.setIcon(QIcon("app/resources/Google_icon.svg"))
+        qlist_item_one_account.setIcon(QIcon(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR'] }/app/resource/Google_icon.svg"))
         # Set size hint
         # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(qlist_item_one_account)
@@ -169,7 +169,7 @@ class BrowserListWidget(Widget):
         if result and account_name not in self.browsers_names:
             self.create_profile(account_name)
         elif account_name in self.browsers_names:
-            open_error_dialog(f"Account with name {account_name} is already exist. Try different name")
+            WarningDialog(f"Account with name {account_name} is already exist. Try different name")
 
     def create_profile(self, profile_name: str):
         path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"

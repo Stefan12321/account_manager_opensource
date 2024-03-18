@@ -1,0 +1,1 @@
+from .passwords_decryptor import do_decrypt, do_decrypt_dict

@@ -6,9 +6,9 @@ from typing import Any
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
-from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition, Flyout, FlyoutAnimationType
+from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition
 
-from accounts_manager_main.serializer import MainConfig, Config
+from app.common.accounts_manager_main.serializer import MainConfig, Config
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 if main_config.config_data["version"]["values"]["private"] is True:
@@ -38,7 +38,7 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.settings_button.setIcon(FluentIcon.SETTING)
         self.settings_button.clicked.connect(self.open_settings)
         self.stop_animation()
-        self.browser_icon.setIcon(QIcon('app/resource/Google_Chrome_icon.svg'))
+        self.browser_icon.setIcon(QIcon(f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/app/resource/Google_Chrome_icon.svg'))
         if main_config.config_data["accounts_tooltips"]:
             self.setToolTips()
             self.installEventFilter(ToolTipFilter(self, showDelay=300, position=ToolTipPosition.TOP))

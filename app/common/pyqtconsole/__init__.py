@@ -5,3 +5,4 @@ __description__ = \
 __author__ = 'Marcus Oskarsson'
 __author_email__ = 'marcus.oscarsson@esrf.fr'
 __url__ = 'https://github.com/marcus-oscarsson/pyqtconsole'
+from .console import PythonConsole

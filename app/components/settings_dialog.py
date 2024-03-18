@@ -1,15 +1,15 @@
 import logging
 import os
 import queue
-from PyQt5.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout
-from accounts_manager_main.serializer import Config, MainConfig
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
+from app.common.accounts_manager_main.serializer import Config, MainConfig
 from app.components.flyout_dialog import FlyoutDialogWithButtons
 from app.components.setting_dialog.line_edit_card import LineEditCard
 from app.components.setting_dialog.line_edit_card_with_button import LineEditCardWithButton
 from app.components.setting_dialog.list_widget_card import ListWidgetCard
 from app.components.setting_dialog.python_console_card import PythonConsoleCard
 from app.components.setting_dialog.tree_widget_card import TreeWidgetPasswordsCard
-from password_decryptor.passwords_decryptor import do_decrypt_dict
+from app.common.password_decryptor import do_decrypt_dict
 
 
 class SettingsDialog(FlyoutDialogWithButtons):

@@ -3,14 +3,14 @@ import shutil
 from cx_Freeze import setup, Executable
 def build():
     try:
-        shutil.rmtree('build/accounts_manager/cleaner')
+        shutil.rmtree('../../build/accounts_manager/cleaner')
     except Exception as e:
         print(f"[ERROR] {e}")
 
     base = None
 
     cleaner_executables = [
-        Executable("updater/cleaner.py",
+        Executable("../common/updater/cleaner.py",
                    target_name='cleaner.exe',
                    base=base),
     ]

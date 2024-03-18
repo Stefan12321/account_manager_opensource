@@ -1,3 +1,4 @@
+import os
 from ctypes.wintypes import MSG, LPRECT
 from ctypes import cast
 
@@ -40,7 +41,7 @@ class BaseFlyoutDialog(QDialog):
 
     def _setup_style(self):
         if isDarkTheme():
-            style = StyleSheet("app/resource/dark/settings_dialog.qss")
+            style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource/dark/settings_dialog.qss")
             self.bg_color = QColor(32, 32, 32)
             self.title_bar.closeBtn._normalColor = QColor(255, 255, 255)
             self.title_bar.maxBtn._normalColor = QColor(255, 255, 255)
@@ -59,10 +60,10 @@ class BaseFlyoutDialog(QDialog):
                     padding: 0 4px
                 }
             """)
-            self.title_bar.setIcon(QIcon('app/resource/logo.svg'))
+            self.title_bar.setIcon(QIcon(f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/app/resource/logo.svg'))
 
         else:
-            style = StyleSheet("app/resource/light/settings_dialog.qss")
+            style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource/light/settings_dialog.qss")
             self.bg_color = QColor(243, 243, 243)
 
             self.title_bar.minBtn._hoverBgColor = QColor(218, 218, 218)

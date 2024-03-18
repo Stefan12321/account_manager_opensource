@@ -1,30 +1,21 @@
 # coding:utf-8
 import csv
-import queue
 from typing import Dict
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLayout, QWidget, QVBoxLayout, QLabel
+from PyQt5.QtWidgets import QLayout, QWidget, QLabel
 
-from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, NavigationInterface, NavigationItemPosition,
-                            NavigationWidget, MessageBox,
-                            isDarkTheme, setTheme, Theme, setThemeColor, qrouter, FluentWindow, NavigationAvatarWidget,
-                            ListWidget, CheckBox, LineEdit, BodyLabel, SingleDirectionScrollArea, ToolButton,
-                            PrimaryPushButton, Dialog)
-from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, FolderListSettingCard,
-                            PushSettingCard,
-                            HyperlinkCard, PrimaryPushSettingCard, ScrollArea,
-                            ComboBoxSettingCard, ExpandLayout, Theme, CustomColorSettingCard,
-                            setTheme, setThemeColor, RangeSettingCard, isDarkTheme)
+from qfluentwidgets import (MessageBox,
+                            SingleDirectionScrollArea, Dialog)
+from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, PrimaryPushSettingCard, ExpandLayout)
 from qfluentwidgets import FluentIcon
 from app.components.options_settings_card import OptionsSettingCard
 
-from accounts_manager_main.serializer import MainConfig
+from app.common.accounts_manager_main.serializer import MainConfig
 from app.components.line_edit_setting_card import LineEditSettingCard
 from app.components.list_setting_card import ListSettingsCard
 from app.view.base_view import Widget
-from updater.base import get_latest_release
 
 base_dir = "./"
 
@@ -109,6 +100,7 @@ class MainSettings(Widget):
         self.show_message_save_settings(resp)
 
     def read_tooltips(self, path=f"{base_dir}/tooltips.csv") -> dict:
+        print(self.main_config.config_data["version"]["values"]["private"])
         with open(path, 'r', encoding='utf-8') as csvfile:
             csvreader = csv.DictReader(csvfile)
             tooltips = {}

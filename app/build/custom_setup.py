@@ -1,6 +1,6 @@
-from setup_main import build as build_main
-from setup_cleaner import build as build_cleaner
-from setup_elevator import build as build_elevator
+from .setup_main import build as build_main
+from .setup_cleaner import build as build_cleaner
+from .setup_elevator import build as build_elevator
 import sys
 
 

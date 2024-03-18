@@ -48,7 +48,7 @@ def download_release(folder, repo_id):
         return False
 
 
-def get_latest_release() -> (str, str):
+def get_latest_release() -> (str, str) or None:
     url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
     headers = {"Authorization": f"token {GITHUB_ACCESS_TOKEN}"}
     response = requests.get(url, headers=headers)

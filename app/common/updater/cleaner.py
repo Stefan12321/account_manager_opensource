@@ -3,7 +3,7 @@ import shutil
 
 from tqdm import tqdm
 
-from updater.base import find_path_to_file, run_main_app
+from app.common.updater.base import find_path_to_file, run_main_app
 
 
 def clean_temp_files():

@@ -1,7 +1,5 @@
 from qfluentwidgets import MessageBoxBase, SubtitleLabel
 
-from app.components.account_item import QListAccountsWidgetItem
-
 
 class WarningDialog(MessageBoxBase):
     """ Custom message box """

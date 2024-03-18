@@ -1,7 +1,7 @@
 from PyQt5.QtWidgets import QVBoxLayout
 from qfluentwidgets import CardWidget, BodyLabel
 
-from pyqtconsole.console import PythonConsole
+from app.common.pyqtconsole import PythonConsole
 
 
 class PythonConsoleCard(CardWidget):

@@ -9,8 +9,8 @@ import undetected_chromedriver as uc
 from PyQt5.QtCore import pyqtSignal
 from selenium.common import WebDriverException
 
-from html_editor.main import create_html
-from user_agents.main import get_user_agent
+from app.common.html_editor.main import create_html
+from app.common.user_agents import get_user_agent
 from .serializer import Config, MainConfig
 
 

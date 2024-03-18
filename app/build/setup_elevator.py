@@ -5,13 +5,13 @@ from cx_Freeze import setup, Executable
 
 def build():
     try:
-        shutil.rmtree('build/accounts_manager/elevator')
+        shutil.rmtree('../../build/accounts_manager/elevator')
     except Exception as e:
         print(f"[ERROR] {e}")
 
     base = None
     elevator_executables = [
-        Executable("updater/elevator.py",
+        Executable("../common/updater/elevator.py",
                    target_name='elevator.exe',
                    base=base),
     ]
