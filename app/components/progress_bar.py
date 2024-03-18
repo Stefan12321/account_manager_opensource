@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDesktopWidget
+from PyQt5.QtWidgets import QDesktopWidget, QApplication
 from qfluentwidgets import ProgressBar, BodyLabel
 
 from app.components.flyout_dialog import BaseFlyoutDialog
@@ -28,7 +28,10 @@ class FilesProgressBarDialog(ProgressBarDialog):
 
     def _init_layout(self):
         super()._init_layout()
-        self.setGeometry(600, 300, 300, 100)
+        self.resize(300, 100)
+        desktop = QApplication.desktop().availableGeometry()
+        w, h = desktop.width(), desktop.height()
+        self.move(w//2 - self.width()//2, h//2 - self.height()//2)
 
     @QtCore.pyqtSlot(str)
     def filename(self, name: str):

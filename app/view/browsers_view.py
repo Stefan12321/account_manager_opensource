@@ -17,8 +17,8 @@ from accounts_manager_main import serializer
 from accounts_manager_main.serializer import MainConfig, Serializer
 from app.common.logger import setup_logger_for_thread
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
-from app.components.delete_accounts_dialog import DeleteAccountDialog
-from app.components.progress_bar import ProgressBarDialog, FilesProgressBarDialog
+from app.components.warning_dialog import WarningDialog
+from app.components.progress_bar import FilesProgressBarDialog
 from app.components.style_sheet import StyleSheet
 from app.view.base_view import Widget
 from app.components.create_account_dialog import CreateAccountDialog
@@ -213,23 +213,16 @@ class BrowserListWidget(Widget):
                 pth = zipfile.Path(filenames[0])
                 profiles = list(pth.iterdir())
                 imported_accounts = [folder.name for folder in profiles]
-                msg = QtWidgets.QMessageBox()
-                msg.setIcon(QtWidgets.QMessageBox.Warning)
-                msg.setText(f"Are y sure you want to import accounts: {imported_accounts}")
+                msg = WarningDialog(f"Are y sure you want to import accounts: {imported_accounts}", self)
                 msg.setWindowTitle("Warning")
-                msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
                 retval = msg.exec()
-                if retval == 1024:
+                if retval == 1:
                     same_items = [item for item in profile_names if item in imported_accounts]
 
                     if len(same_items) > 0:
-                        msg = QtWidgets.QMessageBox()
-                        msg.setIcon(QtWidgets.QMessageBox.Warning)
-                        msg.setText(f"Accounts {same_items} is already exist. Overwrite?")
-                        msg.setWindowTitle("Warning")
-                        msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.No)
+                        msg = WarningDialog(f"Accounts {same_items} is already exist. Overwrite?", self)
                         retval = msg.exec()
-                        if retval == 1024:
+                        if retval == 1:
                             self.progress_bar_thread(self.extract_zip, "Importing", filenames[0])
                             self.update_item_list()
                             print("IMPORTED")
@@ -279,7 +272,7 @@ class BrowserListWidget(Widget):
         checked_items = self.get_checked_items()
 
         if len(checked_items) > 0:
-            dlg = DeleteAccountDialog(checked_items, self)
+            dlg = WarningDialog(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}", self)
             retval = dlg.exec()
             if retval == 1:
                 self.progress_bar_thread(self.delete_profiles_thread, "Deleting", checked_items)
