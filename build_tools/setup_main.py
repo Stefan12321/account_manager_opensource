@@ -7,24 +7,24 @@ from app.common.accounts_manager_main.serializer import Config
 
 
 def build():
-    APP_FOLDER = "../../app"
-    BUILD_FOLDER = "../../build/accounts_manager"
+    APP_FOLDER = "app"
+    BUILD_FOLDER = "build/accounts_manager"
     icon_path = f"{APP_FOLDER}/resource/logo.ico"
     try:
-        shutil.rmtree('../../build')
+        shutil.rmtree('build')
         shutil.rmtree('dist')
     except Exception as e:
         print(f"[ERROR] {e}")
     base = None
 
     executables = [
-        Executable("../../main.py",
+        Executable("main.py",
                    target_name='Accounts manager.exe',
                    base=base,
                    icon=icon_path),
     ]
 
-    includes = [f"{APP_FOLDER}/resource", "../../tooltips.csv"]
+    includes = []
 
     packages = ["os", "threading", "time", "PyQt5", "selenium", "json", "undetected_chromedriver", "pycparser",
                 "account_manager_private_part"]

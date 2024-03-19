@@ -1,5 +1,6 @@
 # coding:utf-8
 import csv
+import os
 from typing import Dict
 
 from PyQt5 import QtWidgets
@@ -99,7 +100,7 @@ class MainSettings(Widget):
         resp = self.main_config.update(settings)
         self.show_message_save_settings(resp)
 
-    def read_tooltips(self, path=f"{base_dir}/tooltips.csv") -> dict:
+    def read_tooltips(self, path=f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/tooltips.csv") -> dict:
         print(self.main_config.config_data["version"]["values"]["private"])
         with open(path, 'r', encoding='utf-8') as csvfile:
             csvreader = csv.DictReader(csvfile)

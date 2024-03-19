@@ -1,21 +1,26 @@
 # coding:utf-8
 import os
-os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
-os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/config/settings.json"
-os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/config"
-
 import sys
+
+# Check if it built app or not
+if getattr(sys, 'frozen', False):
+    os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(sys.executable)
+    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/config"
+    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/resource"
+else:
+    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/config"
+    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/resource"
+os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json"
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QStackedWidget, QHBoxLayout
 
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTheme, setTheme, Theme, setThemeColor
-from qfluentwidgets import FluentIcon as FIF
+from qfluentwidgets import FluentIcon
 from qframelesswindow import FramelessWindow, StandardTitleBar
 from qframelesswindow.windows import WindowsWindowEffect
 from app.common.accounts_manager_main.serializer import MainConfig
-
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
@@ -66,10 +71,10 @@ class Window(FramelessWindow):
         # enable acrylic effect
         # self.navigationInterface.setAcrylicEnabled(True)
 
-        self.addSubInterface(self.browser_list_Interface, FIF.GLOBE, 'Browsers')
+        self.addSubInterface(self.browser_list_Interface, FluentIcon.GLOBE, 'Browsers')
 
         # self.addSubInterface(self.about, FIF.INFO, 'About', NavigationItemPosition.BOTTOM)
-        self.addSubInterface(self.settingInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM)
+        self.addSubInterface(self.settingInterface, FluentIcon.SETTING, 'Settings', NavigationItemPosition.BOTTOM)
 
         # !IMPORTANT: don't forget to set the default route key if you enable the return button
         # qrouter.setDefaultRouteKey(self.stackWidget, self.musicInterface.objectName())
@@ -86,7 +91,7 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(900, 700)
-        self.setWindowIcon(QIcon(f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/app/resource/logo.svg'))
+        self.setWindowIcon(QIcon(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg'))
         self.setWindowTitle('Accounts manager')
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
@@ -115,7 +120,7 @@ class Window(FramelessWindow):
 
     def setQss(self):
         color = 'dark' if isDarkTheme() else 'light'
-        with open(f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"] }/app/resource/{color}/style.qss', encoding='utf-8') as f:
+        with open(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/{color}/style.qss', encoding='utf-8') as f:
             self.setStyleSheet(f.read())
 
     def switchTo(self, widget):

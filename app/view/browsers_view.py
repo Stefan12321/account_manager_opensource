@@ -52,7 +52,7 @@ class AccountsListToolsWidget(QWidget, accounts_list_tools_ui):
     def __init__(self, parent=None):
         super(AccountsListToolsWidget, self).__init__(parent)
         self.setupUi(self)
-        delete_button_style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource/dark/delete_button.qss")
+        delete_button_style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/dark/delete_button.qss")
         setCustomStyleSheet(self.delete_button, str(delete_button_style), str(delete_button_style))
 
 
