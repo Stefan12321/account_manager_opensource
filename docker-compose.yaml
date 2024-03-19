@@ -6,3 +6,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - .\build:C:\app\build
+networks:
+  accounts_manager_opensource_default:
+    external: true

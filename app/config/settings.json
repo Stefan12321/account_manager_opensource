@@ -1,0 +1,28 @@
+{
+  "version": {
+    "type": "dropdown",
+    "values": {
+      "opensource": true,
+      "private": false
+    }
+  },
+  "theme": {
+    "type": "dropdown",
+    "values": {
+      "Dark": true,
+      "Light": false
+    }
+  },
+  "chrome_version": "122",
+  "debug": false,
+  "default_new_tab": "",
+  "onload_pages": [
+    "index",
+    "https://whoer.net/ru#"
+  ],
+  "check_for_updates": false,
+  "change_location": false,
+  "set_random_window_size": false,
+  "accounts_tooltips": true,
+  "python_console": false
+}

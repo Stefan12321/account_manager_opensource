@@ -4,4 +4,5 @@ COPY . /app
 RUN python -m venv venv
 RUN .\venv\Scripts\activate
 RUN pip install --no-cache-dir -r requirements.txt
-CMD ["python", "custom_setup.py", "build"]
+ENV ACCOUNT_MANAGER_PATH_TO_CONFIG=/app/app/config
+CMD ["python", "-m" ,"build_tools", "build"]
