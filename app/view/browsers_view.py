@@ -113,7 +113,7 @@ class BrowserListWidget(Widget):
         path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
         logger = setup_logger_for_thread(path, name)
         one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index)
-        one_account_line_widget.set_account_name(name)
+        # one_account_line_widget.set_account_name(name)
 
         qlist_item_one_account = QListAccountsWidgetItem(name,
                                                          one_account_line_widget,
