@@ -3,7 +3,7 @@ import shutil
 
 from cx_Freeze import setup, Executable
 
-from app.common.accounts_manager_main.serializer import Config
+from app.common.settings.serializer import Config
 
 
 def build():

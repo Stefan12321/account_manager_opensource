@@ -3,7 +3,7 @@ import os
 import user_agent
 
 from user_agent import generate_user_agent
-from app.common.accounts_manager_main.serializer import Config
+from app.common.settings.serializer import Config
 CONFIG_DIR = os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"]
 chrome_builds = Config(f"{CONFIG_DIR}/chrome_versions.json")
 win_versions = Config(f"{CONFIG_DIR}/win_versions.json")

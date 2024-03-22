@@ -2,8 +2,10 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
+from typing import Sequence
 
 import requests
 from cryptography.fernet import Fernet
@@ -11,7 +13,8 @@ from tqdm import tqdm
 
 BASE_DIR = os.environ["ACCOUNT_MANAGER_BASE_DIR"]
 GITHUB_REPO_OWNER = "Stefan12321"
-GITHUB_REPO_NAME = "account_manager"
+GITHUB_REPO_NAME = "account_manager_opensource"
+
 try:
     with open(f"{BASE_DIR}/key", "rb") as key_file:
         with open(f"{BASE_DIR}/token", "rb") as token_file:
@@ -30,7 +33,6 @@ def download_release(folder, repo_id):
     try:
         with requests.get(release_url, headers={
             "Accept": "application/octet-stream",
-            "Authorization": f"Bearer {GITHUB_ACCESS_TOKEN}",
             "X-GitHub-Api-Version": "2022-11-28"},
                           stream=True) as response:
             response.raise_for_status()
@@ -48,12 +50,11 @@ def download_release(folder, repo_id):
         return False
 
 
-def get_latest_release() -> (str, str) or None:
+def get_latest_release() -> Sequence[str] or None:
     url = f"https://api.github.com/repos/{GITHUB_REPO_OWNER}/{GITHUB_REPO_NAME}/releases/latest"
-    headers = {"Authorization": f"token {GITHUB_ACCESS_TOKEN}"}
-    response = requests.get(url, headers=headers)
+    response = requests.get(url)
     if response.status_code == 200:
-        return (response.json()["tag_name"], response.json()["assets"][0]["id"])
+        return response.json()["tag_name"], response.json()["assets"][0]["id"]
     return None
 
 
@@ -77,9 +78,10 @@ def update_progress_bar(pbar):
     return inner
 
 
-def install_release():
-    base_folder = find_path_to_file("accounts_manager.zip")
-    with zipfile.ZipFile(f"{base_folder}/accounts_manager.zip", 'r') as zip_ref:
+def install_release(target_folder: str | Path):
+    temp = Path(tempfile.gettempdir())
+    temp_folder = f"{temp}/account_manager"
+    with zipfile.ZipFile(f"{temp_folder}/elevator/accounts_manager.zip", 'r') as zip_ref:
         # Get the list of file names inside the ZIP archive
         file_list = zip_ref.namelist()
 
@@ -90,7 +92,7 @@ def install_release():
         for file in file_list:
             try:
                 zip_ref.extract(file,
-                                f"{base_folder}/accounts_manager")  # This scary method just get the parent folder path
+                                f"{target_folder}/accounts_manager")
             except Exception as e:
                 print(f"Error: {e}")
             progress_bar.update(1)
@@ -98,20 +100,21 @@ def install_release():
         progress_bar.close()
 
 
-def find_path_to_file(file_in_base_folder) -> Path:
-    base_folder = Path(sys.executable).parent
-    while base_folder:
-        folder_path = Path(base_folder)
-        files = folder_path.glob("*")
-        for file in files:
-            if file.is_file() and file.name == file_in_base_folder:
-                return base_folder
-        if len(base_folder.parents) == 0:
-            raise FileNotFoundError  # Exception("Could not find base folder")
-        else:
-            base_folder = base_folder.parent
+def find_path_to_file(file_in_base_folder) -> Path or None:
+    if getattr(sys, 'frozen', False):
+        base_folder = Path(sys.executable).parent
+    else:
+        base_folder = Path(__file__).parent
+    for root, dirs, files in os.walk(base_folder):
+        if file_in_base_folder in files:
+            return Path(root, file_in_base_folder)
+    return None
 
 
 def run_main_app():
     path = find_path_to_file("Accounts manager.exe")
     subprocess.Popen([f'{path}/Accounts manager.exe'], shell=True)
+
+
+if __name__ == '__main__':
+    print(find_path_to_file("base.py"))

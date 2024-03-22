@@ -1,17 +1,19 @@
 import os
 import shutil
+import tempfile
+from pathlib import Path
 
 from tqdm import tqdm
 
-from app.common.updater.base import find_path_to_file, run_main_app
+from app.common.updater.base import run_main_app
 
 
 def clean_temp_files():
-    folder = find_path_to_file("accounts_manager.zip")
-
+    temp = Path(tempfile.gettempdir())
+    temp_folder = f"{temp}/account_manager"
     # Get the list of files and directories to delete
-    directories_to_remove = [f"{folder}/elevator", f"{folder}/saved_files"]
-    files_to_remove = [f"{folder}/accounts_manager.zip"]
+    directories_to_remove = [temp_folder]
+    files_to_remove = []
 
     # Calculate the total number of items to delete (for the progress bar)
     total_items = len(directories_to_remove) + len(files_to_remove)

@@ -11,9 +11,12 @@ from qfluentwidgets import (MessageBox,
                             SingleDirectionScrollArea, Dialog)
 from qfluentwidgets import (SettingCardGroup, SwitchSettingCard, PrimaryPushSettingCard, ExpandLayout)
 from qfluentwidgets import FluentIcon
+
+from app.common.updater.base import get_latest_release
+from app.common.updater.update_application import update_application
 from app.components.options_settings_card import OptionsSettingCard
 
-from app.common.accounts_manager_main.serializer import MainConfig
+from app.common.settings.serializer import MainConfig
 from app.components.line_edit_setting_card import LineEditSettingCard
 from app.components.list_setting_card import ListSettingsCard
 from app.view.base_view import Widget
@@ -214,11 +217,12 @@ class MainSettings(Widget):
 
     def check_for_updates(self):
         # TODO  Finish this after build release
+        update_application()
         # latest_version, _ = get_latest_release()
         # print(latest_version)
-        w = Dialog("Title", "This is a message notification", self)
-
-        if w.exec():
-            print('Confirmed')
-        else:
-            print('Canceled')
+        # w = Dialog("Title", "This is a message notification", self)
+        #
+        # if w.exec():
+        #     print('Confirmed')
+        # else:
+        #     print('Canceled')

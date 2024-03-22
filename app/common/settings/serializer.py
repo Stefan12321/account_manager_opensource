@@ -6,6 +6,8 @@ import shutil
 from typing import List
 
 APP_VERSION = "0.66"
+
+
 class Serializer:
 
     def serialize(self, data: dict, path: str) -> None:
@@ -134,4 +136,3 @@ class MainConfig(Serializer):
             logging.warning(f"There is no {key} in config file")
             self.update({key: default_value})
             return default_value
-

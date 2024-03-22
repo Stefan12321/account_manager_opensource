@@ -8,8 +8,9 @@ if getattr(sys, 'frozen', False):
     os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/config"
     os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/resource"
 else:
-    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/config"
-    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.path.dirname(os.path.realpath(__file__))}/app/resource"
+    os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
+    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config"
+    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource"
 os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json"
 
 from PyQt5.QtCore import Qt
@@ -20,13 +21,13 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTh
 from qfluentwidgets import FluentIcon
 from qframelesswindow import FramelessWindow, StandardTitleBar
 from qframelesswindow.windows import WindowsWindowEffect
-from app.common.accounts_manager_main.serializer import MainConfig
+from app.common.settings.serializer import MainConfig
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
 from app.view.browsers_view import BrowserListWidget
 from app.view.settings_view import MainSettings
-from app.common.accounts_manager_main.serializer import APP_VERSION
+from app.common.settings.serializer import APP_VERSION
 
 
 class Window(FramelessWindow):

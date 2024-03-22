@@ -11,7 +11,7 @@ from selenium.common import WebDriverException
 
 from app.common.html_editor.main import create_html
 from app.common.user_agents import get_user_agent
-from .serializer import Config, MainConfig
+from app.common.settings.serializer import Config, MainConfig
 
 
 class WebBrowser:

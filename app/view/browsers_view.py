@@ -13,8 +13,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QHBoxLayout, QWidget, QVBoxLayout
 from qfluentwidgets import ListWidget, setCustomStyleSheet
 
-from app.common.accounts_manager_main import serializer
-from app.common.accounts_manager_main.serializer import MainConfig, Serializer
+from app.common.settings import serializer
+from app.common.settings.serializer import MainConfig, Serializer
 from app.common.logger import setup_logger_for_thread
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.warning_dialog import WarningDialog
@@ -30,7 +30,7 @@ from app.common.user_agents.main import get_user_agent
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
 if main_config.config_data["version"]["values"]["opensource"] is True:
-    from app.common.accounts_manager_main import WebBrowser
+    from app.common.browser import WebBrowser
 
     serializer.APP_VERSION += " opensource"
 

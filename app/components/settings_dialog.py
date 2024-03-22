@@ -2,7 +2,7 @@ import logging
 import os
 import queue
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
-from app.common.accounts_manager_main.serializer import Config, MainConfig
+from app.common.settings.serializer import Config, MainConfig
 from app.components.flyout_dialog import FlyoutDialogWithButtons
 from app.components.setting_dialog.line_edit_card import LineEditCard
 from app.components.setting_dialog.line_edit_card_with_button import LineEditCardWithButton

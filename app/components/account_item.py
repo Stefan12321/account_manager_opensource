@@ -8,7 +8,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
 from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition
 
-from app.common.accounts_manager_main.serializer import MainConfig, Config
+from app.common.settings.serializer import MainConfig, Config
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 if main_config.config_data["version"]["values"]["private"] is True:

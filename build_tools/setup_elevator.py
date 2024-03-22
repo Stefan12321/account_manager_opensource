@@ -29,7 +29,7 @@ def build():
                          "pycparser", "pycryptodomex", "pykrakenapi", "pyparsing", "pyqt-tools", "PyQt5", "PyQt5-Qt5",
                          "PyQt5-sip", "PyQt5-stubs", "pyqt6-plugins", "pyqt6-tools", "PySocks", "python-dateutil",
                          "python-dotenv", "PythonQwt", "pytz", "pywin32", "PyYAML", "qt-material", "qt6-applications",
-                         "qt6-tools", "QtPy", "rarfile", "requests-oauthlib", "rsa", "scipy", "selenium", "six",
+                         "qt6-tools", "QtPy", "rarfile", "requests-oauthlib", "rsa", "scipy", "six",
                          "sniffio", "sortedcontainers", "soupsieve", "trio", "trio-websocket",
                          "uritemplate", "user-agent", "websockets", "wsproto", "yarl", "zipp"]
     elevator_options = {
