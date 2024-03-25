@@ -17,7 +17,7 @@ class Serializer:
         :return: None
         """
 
-        with open(path, 'w') as f:
+        with open(path, 'w', encoding='utf-8') as f:
             try:
                 json.dump(data, f)
                 print(f"Serialized data: {data}")
@@ -28,7 +28,7 @@ class Serializer:
         """
         :return: list of deserialized data from config.json
         """
-        with open(path, 'r') as f:
+        with open(path, 'r', encoding='utf-8') as f:
             data = json.load(f)
 
         return data

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 
 # Form implementation generated from reading ui file '.\UI\accounts_list_tools_widget.ui'
 #
@@ -9,6 +10,9 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QWidget
+
+from app.components.style_sheet import StyleSheet
 
 
 class Ui_Form(object):
@@ -357,4 +361,12 @@ class Ui_Form(object):
         self.delete_button.setText(_translate("Form", "Delete"))
         self.import_button.setText(_translate("Form", "Import"))
         self.export_button.setText(_translate("Form", "Export"))
-from qfluentwidgets import CheckBox, PrimaryPushButton, PushButton
+from qfluentwidgets import CheckBox, PrimaryPushButton, PushButton, setCustomStyleSheet
+
+
+class AccountsListToolsWidget(QWidget, Ui_Form):
+    def __init__(self, parent=None):
+        super(AccountsListToolsWidget, self).__init__(parent)
+        self.setupUi(self)
+        delete_button_style = StyleSheet(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/dark/delete_button.qss")
+        setCustomStyleSheet(self.delete_button, str(delete_button_style), str(delete_button_style))

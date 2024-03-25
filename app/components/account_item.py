@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QIcon
+from PyQt5.QtCore import pyqtSignal, Qt, QMimeData
+from PyQt5.QtGui import QIcon, QDrag, QPixmap
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
 from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition
 
@@ -38,7 +38,6 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self._queue = None
         self.locals = None
         self.locals_signal.connect(self.set_locals)
-
 
         self.setupUi(self)
         self.settings_button.setIcon(FluentIcon.SETTING)
@@ -85,8 +84,10 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
             self.config.update({"icon": str(new_file_path.relative_to(base_path))})
 
     def _update_name(self, name: str):
+        os.rename(Path(self.path), f"{Path(self.path).parent}/{name}")
+        self.name = name
+        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
 
-        self.config.update({"name": name})
     def setToolTips(self):
         self.setToolTip(str(self.config))
 
@@ -100,7 +101,6 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         dlg.exec()
 
     def set_account_name(self, name: str):
-        self.name = name
         self.account_name_label.setText(name)
 
     def set_locals(self, _locals: dict[str, Any]):
@@ -117,8 +117,24 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.running_ring.hide()
         self.is_animation_running = False
 
+    def mouseMoveEvent(self, e):
+
+        # super().mouseMoveEvent(e)
+        if e.buttons() == Qt.LeftButton:
+            drag = QDrag(self)
+            mime = QMimeData()
+            mime.setText(self.name)
+            drag.setMimeData(mime)
+
+            pixmap = QPixmap(self.size())
+            self.render(pixmap)
+            drag.setPixmap(pixmap)
+
+            drag.exec_(Qt.MoveAction)
+
 
 class QListAccountsWidgetItem(QListWidgetItem):
+
     def __init__(self, name: str, widget: QWidgetOneAccountLine, main_config: MainConfig, parent=None, ):
         super(QListAccountsWidgetItem, self).__init__(parent)
         self.name = name
@@ -126,4 +142,8 @@ class QListAccountsWidgetItem(QListWidgetItem):
         self.status: bool = False
         self.thread: threading.Thread or None = None
         self.widget = widget
+        self.widget.account_name_label.name_changed.connect(self.update_name)
         self.setSizeHint(self.widget.sizeHint())
+
+    def update_name(self, old_name: str, name: str):
+        self.name = name

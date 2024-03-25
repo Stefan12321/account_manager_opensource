@@ -10,10 +10,9 @@
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtWidgets import QLineEdit, QLabel, QVBoxLayout, QWidget, QPushButton, QHBoxLayout
-from qfluentwidgets import CaptionLabel, CheckBox, IconWidget, IndeterminateProgressRing, ToolButton, LineEdit, \
-    PushButton
+from qfluentwidgets import CheckBox, IconWidget, IndeterminateProgressRing, ToolButton
+
+from app.components.clickable_label import ClickableLabel
 
 
 class ClickedIconWidget(IconWidget):
@@ -30,46 +29,6 @@ class ClickedIconWidget(IconWidget):
     def set_icon(self):
         # Your icon setting code here
         self.icon_changed.emit()
-
-
-class ClickableLabel(QWidget):
-    name_changed = pyqtSignal(str)
-
-    def __init__(self, text, parent=None):
-        super(ClickableLabel, self).__init__(parent)
-        self.layout = QHBoxLayout(self)
-        self.label = CaptionLabel(text)
-        self.edit = LineEdit()
-        self.edit.setPlaceholderText("Enter new text")
-        self.ok_button = PushButton("OK")
-        self.ok_button.clicked.connect(self.on_ok_clicked)
-        self.layout.addWidget(self.label)
-        self.layout.addWidget(self.edit)
-        self.layout.addWidget(self.ok_button)
-        self.edit.hide()
-        self.ok_button.hide()
-        self.is_editing = False
-
-    def mousePressEvent(self, event):
-        if not self.is_editing:
-            self.label.hide()
-            self.edit.setText(self.label.text())
-            self.edit.show()
-            self.ok_button.show()
-            self.is_editing = True
-
-    def on_ok_clicked(self):
-        new_text = self.edit.text()
-        if new_text != self.label.text():
-            self.label.setText(new_text)
-            self.name_changed.emit(new_text)
-        self.edit.hide()
-        self.ok_button.hide()
-        self.label.show()
-        self.is_editing = False
-
-    def setText(self, text: str):
-        self.label.setText(text)
 
 
 class Ui_Form(object):
@@ -99,7 +58,6 @@ class Ui_Form(object):
         self.horizontalLayout.addWidget(self.CheckBox)
         spacerItem1 = QtWidgets.QSpacerItem(20, 20, QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout.addItem(spacerItem1)
-        # self.account_name_label = CaptionLabel(Form)
         self.account_name_label = ClickableLabel(Form)
         self.account_name_label.setObjectName("account_name_label")
         self.horizontalLayout.addWidget(self.account_name_label)
