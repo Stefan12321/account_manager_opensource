@@ -10,7 +10,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QPoint
 from PyQt5.QtGui import QColor, QIcon
 from PyQt5.QtWidgets import QFrame, QVBoxLayout, QListWidget
-from qfluentwidgets import TabBar, ListWidget, FluentIconBase, TabItem, CaptionLabel
+from qfluentwidgets import TabBar, ListWidget, FluentIconBase, TabItem
 
 from app.common.logger import setup_logger_for_thread
 from app.common.password_decryptor import do_decrypt
@@ -18,7 +18,6 @@ from app.common.settings import MainConfig, Serializer
 from app.common.user_agents import get_user_agent
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
 from app.components.accounts_list_tools_widget import AccountsListToolsWidget
-from app.components.clickable_label import ClickableLabel
 from app.components.create_account_dialog import CreateAccountDialog
 from app.components.progress_bar import FilesProgressBarDialog
 from app.components.warning_dialog import WarningDialog
@@ -354,7 +353,6 @@ class BrowsersTab(QFrame):
                     counter += 1
                     self.progress_signal.emit(int(counter / (length / 100)))
                     self.progress_filename_signal.emit(file.filename)
-                    # print(f"{counter / (length / 100)}%")
         self.progress_exit_signal.emit()
 
     def delete_profiles(self):

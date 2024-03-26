@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Any
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal, Qt, QMimeData
-from PyQt5.QtGui import QIcon, QDrag, QPixmap
+from PyQt5.QtCore import pyqtSignal, Qt, QMimeData, QRect, QRectF, QPointF, QPoint
+from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor, QRgba64
 from PyQt5.QtWidgets import QWidget, QListWidgetItem
 from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition
 
@@ -26,7 +26,6 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
 
     def __init__(self, name: str, main_config: MainConfig, logger: logging.Logger, index: int, parent=None):
         super(QWidgetOneAccountLine, self).__init__(parent)
-
         self.is_animation_running = None
         self.index = index
         self.logger = logger
@@ -118,18 +117,22 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.is_animation_running = False
 
     def mouseMoveEvent(self, e):
-
-        # super().mouseMoveEvent(e)
         if e.buttons() == Qt.LeftButton:
             drag = QDrag(self)
             mime = QMimeData()
             mime.setText(self.name)
             drag.setMimeData(mime)
-
             pixmap = QPixmap(self.size())
-            self.render(pixmap)
+            pixmap.fill(Qt.transparent)  # Fill with transparent color
+            painter = QPainter(pixmap)
+            painter.setRenderHint(QPainter.Antialiasing)  # Enable anti-aliasing for smooth edges
+            rounded_rect = QRect(0, 0, self.width(), self.height()).adjusted(1, 1, -1, -1)
+            painter.setBrush(QColor(60, 60, 60, 100))
+            painter.setPen(Qt.NoPen)
+            painter.drawRoundedRect(rounded_rect, 5, 5)  # Adjust the radius values for roundness
+            painter.end()
+            drag.setHotSpot(e.pos())
             drag.setPixmap(pixmap)
-
             drag.exec_(Qt.MoveAction)
 
 
