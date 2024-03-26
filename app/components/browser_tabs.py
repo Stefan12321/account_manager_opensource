@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import threading
+import time
 import zipfile
 from typing import List, Callable, Union
 
@@ -162,18 +163,23 @@ class BrowsersTab(QFrame):
     progress_signal = QtCore.pyqtSignal(int)
     progress_exit_signal = QtCore.pyqtSignal()
     progress_filename_signal = QtCore.pyqtSignal(str)
+    item_list_updated = QtCore.pyqtSignal()
 
     """ Tab interface """
 
-    def __init__(self, main_config: MainConfig, browsers_names: List[str], objectName, parent=None):
+    def __init__(self, main_config: MainConfig, browsers_names: List[str], objectName,
+                 parent=None, is_for_all_profiles=False):
         super().__init__(parent=parent)
+        self.is_for_all_profiles = is_for_all_profiles
         self.main_config = main_config
+        self.all_browser_names = os.listdir("profiles")
         self.browsers_names = browsers_names
-        self.list_item_arr = []
+        self.list_item_arr: List[QListAccountsWidgetItem] = []
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
         self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
         self.setObjectName(objectName)
         self._init_layout()
+        self.start_threads_watcher()
 
     def _init_layout(self):
 
@@ -184,9 +190,14 @@ class BrowsersTab(QFrame):
         self.list_tools.setFixedHeight(60)
         self.list_tools.CheckBox.stateChanged.connect(self.set_all_checkbox)
         self.list_tools.create_profile_button.clicked.connect(self.on_create_profile_btn_click)
-        self.list_tools.export_button.clicked.connect(self.export_profiles)
         self.list_tools.delete_button.clicked.connect(self.delete_profiles)
-        self.list_tools.import_button.clicked.connect(self.import_profiles)
+        if self.objectName() != "All":
+            self.list_tools.export_button.hide()
+            self.list_tools.import_button.hide()
+            self.list_tools.horizontalLayout.addStretch(2)
+        else:
+            self.list_tools.export_button.clicked.connect(self.export_profiles)
+            self.list_tools.import_button.clicked.connect(self.import_profiles)
 
         self.vBoxLayout.addWidget(self.list_tools, 1)
         self.vBoxLayout.addWidget(self.listWidget, 1)
@@ -198,6 +209,10 @@ class BrowsersTab(QFrame):
         self.listWidget.clear()
         for index, browser_name in enumerate(self.browsers_names):
             self.create_list_item(browser_name, index)
+
+    def update_item_list_for_all_browsers(self):
+        self.browsers_names = os.listdir("profiles")
+        self.update_item_list()
 
     def create_list_item(self, name: str, index: int):
         path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
@@ -215,6 +230,7 @@ class BrowsersTab(QFrame):
         self.listWidget.addItem(qlist_item_one_account)
         self.listWidget.setItemWidget(qlist_item_one_account, one_account_line_widget)
         self.list_item_arr.append(qlist_item_one_account)
+        self.item_list_updated.emit()
 
     def account_name_changed(self, old_name: str, new_name: str):
         self.browsers_names.remove(old_name)
@@ -235,10 +251,11 @@ class BrowsersTab(QFrame):
         dlg.show()
         result = dlg.exec()
         account_name = dlg.new_account_line_edit.text()
-        if result and account_name not in self.browsers_names:
+
+        if result and account_name not in self.all_browser_names:
             self.create_profile(account_name)
-        elif account_name in self.browsers_names:
-            WarningDialog(f"Account with name {account_name} is already exist. Try different name")
+        elif account_name in self.all_browser_names:
+            WarningDialog(f"Account with name {account_name} is already exist. Try different name", self).exec()
 
     def create_profile(self, profile_name: str):
         path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"
@@ -258,6 +275,8 @@ class BrowsersTab(QFrame):
         s.serialize(data, fr'{path}\config.json')
         self.create_list_item(profile_name, self.listWidget.count())
         self.browsers_names.append(profile_name)
+        if self.objectName() != "All":
+            self.main_config.update(self.main_config.config_data)
 
     def export_profiles(self):
         checked_items = self.get_checked_items()
@@ -271,10 +290,8 @@ class BrowsersTab(QFrame):
             self.progress_bar_thread(self.zip_directory, "Exporting",
                                      [fr'{self.profiles_path}\{profile.name}' for profile in checked_items],
                                      export_path)
-        print("EXPORTED")
 
     def import_profiles(self):
-        profile_names = os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
         dlg = QtWidgets.QFileDialog()
         if dlg.exec_():
             filenames = dlg.selectedFiles()
@@ -282,27 +299,30 @@ class BrowsersTab(QFrame):
                 pth = zipfile.Path(filenames[0])
                 profiles = list(pth.iterdir())
                 imported_accounts = [folder.name for folder in profiles]
-                msg = WarningDialog(f"Are y sure you want to import accounts: {imported_accounts}", self)
-                msg.setWindowTitle("Warning")
-                retval = msg.exec()
-                if retval == 1:
-                    same_items = [item for item in profile_names if item in imported_accounts]
 
-                    if len(same_items) > 0:
-                        msg = WarningDialog(f"Accounts {same_items} is already exist. Overwrite?", self)
-                        retval = msg.exec()
-                        if retval == 1:
-                            self.progress_bar_thread(self.extract_zip, "Importing", filenames[0])
-                            self.update_item_list()
-                            print("IMPORTED")
-                        else:
-                            self.progress_bar_thread(self.extract_zip, "Importing", filenames[0], same_items)
-                            self.update_item_list()
-                            print("IMPORTED")
-                    else:
-                        self.progress_bar_thread(self.extract_zip, "Importing", filenames[0])
-                        self.update_item_list()
-                        print("IMPORTED")
+                if self.confirm_import(imported_accounts) == 1:
+                    self.handle_existing_accounts(imported_accounts, filenames[0])
+                    self.update_item_list()
+
+    def confirm_import(self, imported_accounts: List[str]) -> int:
+        msg = WarningDialog(f"Are y sure you want to import accounts: {imported_accounts}", self)
+        msg.setWindowTitle("Warning")
+        return msg.exec()
+
+    def handle_existing_accounts(self, imported_accounts: List[str], filename):
+        profile_names = os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
+        same_items = [item for item in profile_names if item in imported_accounts]
+        not_same_items = [item for item in imported_accounts if item not in same_items]
+        self.browsers_names += not_same_items
+        if len(same_items) > 0:
+            msg = WarningDialog(f"Accounts {same_items} is already exist. Overwrite?", self)
+            retval = msg.exec()
+            if retval == 1:
+                self.progress_bar_thread(self.extract_zip, "Importing", filename)
+            else:
+                self.progress_bar_thread(self.extract_zip, "Importing", filename, same_items)
+        else:
+            self.progress_bar_thread(self.extract_zip, "Importing", filename)
 
     def zip_directory(self, folders_path: list, zip_path: str):
         counter = 1
@@ -389,7 +409,39 @@ class BrowsersTab(QFrame):
 
     def on_tab_dropped_account(self, account_name: str):
         tab_name = self.sender().routeKey()
-        if account_name not in self.main_config.config_data["tabs"]["values"][tab_name] and account_name not in self.browsers_names:
+        if account_name not in self.main_config.config_data["tabs"]["values"][
+            tab_name] and account_name not in self.browsers_names:
             self.browsers_names.append(account_name)
             self.main_config.update(self.main_config.config_data)
         self.update_item_list()
+
+    def start_threads_watcher(self):
+        t = threading.Thread(target=self.threads_watcher)
+        t.start()
+
+    def threads_watcher(self):
+        while True:
+            for item in self.list_item_arr:
+                try:
+                    self.manage_animation_status(item)
+
+                except AttributeError:
+                    pass
+            time.sleep(1)
+
+    def manage_animation_status(self, item: QListAccountsWidgetItem):
+        widget = self.listWidget.itemWidget(item)
+        if item.thread.is_alive():
+            if not widget.is_animation_running:
+                widget.start_animation()
+
+            # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+            account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+            account_widget_item.status = True
+        else:
+            if widget.is_animation_running:
+                widget.stop_animation()
+
+            # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+            account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+            account_widget_item.status = False

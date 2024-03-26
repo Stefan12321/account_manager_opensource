@@ -1,30 +1,23 @@
 import logging
 import os
 import queue
-import shutil
 import threading
 import time
-import zipfile
-from typing import List, Callable
+from typing import List
 
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QVBoxLayout, QStackedWidget
 from qfluentwidgets import TabItem
 
 from app.common.settings import serializer
-from app.common.settings.serializer import MainConfig, Serializer
-from app.common.logger import setup_logger_for_thread
-from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
+from app.common.settings.serializer import MainConfig
+from app.components.account_item import QListAccountsWidgetItem
 from app.components.browser_tabs import BrowsersTabBar, BrowsersTab
 from app.components.create_new_tab_dialog import CreateTabDialog
-from app.components.progress_bar import FilesProgressBarDialog
 from app.view.base_view import Widget
-from app.components.create_account_dialog import CreateAccountDialog
 from app.components.warning_dialog import WarningDialog
 from app.common.password_decryptor.passwords_decryptor import do_decrypt
-from app.common.user_agents.main import get_user_agent
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
@@ -55,6 +48,7 @@ class BrowserListWidget(Widget):
     def __init__(self, main_config: MainConfig, parent=None):
         super().__init__("browser-list", parent=parent)
         self.main_config = main_config
+        self.all_browser_tab = None
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
         self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
         try:
@@ -70,8 +64,6 @@ class BrowserListWidget(Widget):
 
         self.__init_layout()
 
-        self.start_threads_watcher()
-
     def __init_layout(self):
         self.vBoxLayout = QVBoxLayout(self)
 
@@ -83,7 +75,7 @@ class BrowserListWidget(Widget):
 
         # init base tab
         logo_svg = 'app/resource/logo.svg'
-        browser_tab, tab = self.addTab(
+        self.all_browser_tab, tab = self.addTab(
             [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
              if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")], "All", "All",
             logo_svg)
@@ -94,8 +86,6 @@ class BrowserListWidget(Widget):
             for tab_name in self.main_config.config_data["tabs"]["values"].keys():
                 self.addTab(self.main_config.config_data["tabs"]["values"][tab_name], tab_name, tab_name,
                             logo_svg)
-
-        # self.update_item_list()
 
         self.vBoxLayout.addWidget(self.tabBar)
         self.vBoxLayout.addWidget(self.browser_list_stacked_widget)
@@ -114,6 +104,8 @@ class BrowserListWidget(Widget):
         tab = self.tabBar.addTab(routeKey, text, icon, None, from_user)
         browser_tab = BrowsersTab(self.main_config, browser_names, routeKey, self)
         browser_tab.listWidget.itemClicked.connect(self.item_click)
+        if self.all_browser_tab:
+            browser_tab.item_list_updated.connect(self.all_browser_tab.update_item_list_for_all_browsers)
         tab.dropped_browser.connect(browser_tab.on_tab_dropped_account)
         self.browser_list_stacked_widget.addWidget(browser_tab)
         return browser_tab, tab
@@ -145,30 +137,4 @@ class BrowserListWidget(Widget):
                    main_config=self.main_config,
                    set_locals_signal=set_locals_signal)
 
-    def start_threads_watcher(self):
-        t = threading.Thread(target=self.threads_watcher)
-        t.start()
 
-    def threads_watcher(self):
-        while True:
-            for i in self.list_item_arr:
-                try:
-                    widget = self.listWidget.itemWidget(i)
-                    if i.thread.is_alive():
-                        if not widget.is_animation_running:
-                            widget.start_animation()
-
-                        # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-                        account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
-                        account_widget_item.status = True
-                    else:
-                        if widget.is_animation_running:
-                            widget.stop_animation()
-
-                        # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-                        account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
-                        account_widget_item.status = False
-
-                except AttributeError:
-                    pass
-            time.sleep(1)
