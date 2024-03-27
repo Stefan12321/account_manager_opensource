@@ -48,7 +48,7 @@ class BrowserListWidget(Widget):
     def __init__(self, main_config: MainConfig, parent=None):
         super().__init__("browser-list", parent=parent)
         self.main_config = main_config
-        self.all_browser_tab = None
+        self.browser_tab_all_accounts = None
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
         self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
         try:
@@ -75,7 +75,7 @@ class BrowserListWidget(Widget):
 
         # init base tab
         logo_svg = 'app/resource/logo.svg'
-        self.all_browser_tab, tab = self.addTab(
+        self.browser_tab_all_accounts, tab = self.addTab(
             [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
              if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")], "All", "All",
             logo_svg)
@@ -104,8 +104,8 @@ class BrowserListWidget(Widget):
         tab = self.tabBar.addTab(routeKey, text, icon, None, from_user)
         browser_tab = BrowsersTab(self.main_config, browser_names, routeKey, self)
         browser_tab.listWidget.itemClicked.connect(self.item_click)
-        if self.all_browser_tab:
-            browser_tab.item_list_updated.connect(self.all_browser_tab.update_item_list_for_all_browsers)
+        if self.browser_tab_all_accounts:
+            browser_tab.item_list_updated.connect(self.browser_tab_all_accounts.update_item_list_for_all_browsers)
         tab.dropped_browser.connect(browser_tab.on_tab_dropped_account)
         self.browser_list_stacked_widget.addWidget(browser_tab)
         return browser_tab, tab

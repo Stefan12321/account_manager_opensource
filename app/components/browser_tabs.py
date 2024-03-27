@@ -67,6 +67,7 @@ class BrowsersTabBar(TabBar):
 
         self.hBoxLayout.insertSpacing(8, 20)
 
+
     def canDrag(self, pos: QPoint):
         if not super().canDrag(pos):
             return False
@@ -169,6 +170,7 @@ class BrowsersTab(QFrame):
     def __init__(self, main_config: MainConfig, browsers_names: List[str], objectName,
                  parent=None, is_for_all_profiles=False):
         super().__init__(parent=parent)
+        self.parent_widget = parent
         self.is_for_all_profiles = is_for_all_profiles
         self.main_config = main_config
         self.all_browser_names = os.listdir("profiles")
@@ -216,7 +218,7 @@ class BrowsersTab(QFrame):
     def create_list_item(self, name: str, index: int):
         path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
         logger = setup_logger_for_thread(path, name)
-        one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index)
+        one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index, self)
         one_account_line_widget.account_name_label.name_changed.connect(self.account_name_changed)
 
         qlist_item_one_account = QListAccountsWidgetItem(name,

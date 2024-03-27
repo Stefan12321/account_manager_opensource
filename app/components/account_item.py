@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any
 
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import pyqtSignal, Qt, QMimeData, QRect, QRectF, QPointF, QPoint
-from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor, QRgba64
-from PyQt5.QtWidgets import QWidget, QListWidgetItem
-from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition
+from PyQt5.QtCore import pyqtSignal, Qt, QMimeData, QRect
+from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import QWidget, QListWidgetItem, QAction
+from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition, RoundMenu, Action, MenuAnimationType
 
 from app.common.settings.serializer import MainConfig, Config
 
@@ -27,6 +27,7 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
     def __init__(self, name: str, main_config: MainConfig, logger: logging.Logger, index: int, parent=None):
         super(QWidgetOneAccountLine, self).__init__(parent)
         self.is_animation_running = None
+        self.parent_widget = parent
         self.index = index
         self.logger = logger
         self.name = name
@@ -53,6 +54,9 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
             self.set_account_name(self.config.config_data["name"])
         else:
             self.set_account_name(self.name)
+
+    def get_name(self) -> str:
+        return self.name
 
     def _init_icon(self):
         if "icon" in self.config.config_data:
@@ -134,6 +138,32 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
             drag.setHotSpot(e.pos())
             drag.setPixmap(pixmap)
             drag.exec_(Qt.MoveAction)
+
+    def contextMenuEvent(self, e):
+        menu = RoundMenu(parent=self)
+        # add sub menu
+        submenu = RoundMenu("Send to tab", self)
+        submenu.setIcon(FluentIcon.ADD)
+        submenu.addActions([
+            Action(FluentIcon.FOLDER, tab.routeKey()) for tab in self.parent_widget.parent_widget.tabBar.items if
+            tab.routeKey() != "All"
+
+        ])
+
+        menu.addMenu(submenu)
+        current_tab_name = self.parent_widget.parent_widget.tabBar.currentTab().routeKey()
+        if current_tab_name != "All":
+            remove_from_tab_action = Action(FluentIcon.DELETE, f"Remove {self.get_name()} from current tab")
+            menu.addAction(remove_from_tab_action)
+
+        # add separator
+        menu.addSeparator()
+        select_all_action = QAction('Select all', shortcut='Ctrl+A')
+        select_all_action.triggered.connect(lambda: self.parent_widget.list_tools.CheckBox.nextCheckState())
+        menu.addAction(select_all_action)
+
+        # show menu
+        menu.exec(e.globalPos(), aniType=MenuAnimationType.DROP_DOWN)
 
 
 class QListAccountsWidgetItem(QListWidgetItem):
