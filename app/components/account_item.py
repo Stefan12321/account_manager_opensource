@@ -3,12 +3,12 @@ import os
 import shutil
 import threading
 from pathlib import Path
-from typing import Any
+from typing import Any, List
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSignal, Qt, QMimeData, QRect
-from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor
-from PyQt5.QtWidgets import QWidget, QListWidgetItem, QAction
+from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor, QKeySequence
+from PyQt5.QtWidgets import QWidget, QListWidgetItem, QAction, QShortcut
 from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition, RoundMenu, Action, MenuAnimationType
 
 from app.common.settings.serializer import MainConfig, Config
@@ -144,22 +144,32 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         # add sub menu
         submenu = RoundMenu("Send to tab", self)
         submenu.setIcon(FluentIcon.ADD)
-        submenu.addActions([
-            Action(FluentIcon.FOLDER, tab.routeKey()) for tab in self.parent_widget.parent_widget.tabBar.items if
-            tab.routeKey() != "All"
-
-        ])
+        send_to_tab_actions_list: List[Action] = []
+        for tab in self.parent_widget.parent_widget.tabBar.items:
+            tab_name = tab.routeKey()
+            if tab_name != "All":
+                action = Action(FluentIcon.FOLDER, tab_name)
+                action.triggered.connect(
+                    lambda checked, tab_key=tab_name: self.parent_widget.add_account_to_tab(self.name, tab_key))
+                send_to_tab_actions_list.append(action)
+        submenu.addActions(send_to_tab_actions_list)
 
         menu.addMenu(submenu)
         current_tab_name = self.parent_widget.parent_widget.tabBar.currentTab().routeKey()
         if current_tab_name != "All":
             remove_from_tab_action = Action(FluentIcon.DELETE, f"Remove {self.get_name()} from current tab")
+            remove_from_tab_action.triggered.connect(lambda: self.parent_widget.remove_account_from_tab(self.name))
             menu.addAction(remove_from_tab_action)
+
+        settings_action = Action(FluentIcon.SETTING, "Settings")
+        settings_action.triggered.connect(self.open_settings)
+        menu.addAction(settings_action)
 
         # add separator
         menu.addSeparator()
         select_all_action = QAction('Select all', shortcut='Ctrl+A')
         select_all_action.triggered.connect(lambda: self.parent_widget.list_tools.CheckBox.nextCheckState())
+
         menu.addAction(select_all_action)
 
         # show menu

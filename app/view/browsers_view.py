@@ -15,6 +15,7 @@ from app.common.settings.serializer import MainConfig
 from app.components.account_item import QListAccountsWidgetItem
 from app.components.browser_tabs import BrowsersTabBar, BrowsersTab
 from app.components.create_new_tab_dialog import CreateTabDialog
+from app.components.stacked_widget import StackedWidget
 from app.view.base_view import Widget
 from app.components.warning_dialog import WarningDialog
 from app.common.password_decryptor.passwords_decryptor import do_decrypt
@@ -67,7 +68,7 @@ class BrowserListWidget(Widget):
     def __init_layout(self):
         self.vBoxLayout = QVBoxLayout(self)
 
-        self.browser_list_stacked_widget = QStackedWidget(self, objectName='browser_list_stacked_widget')
+        self.browser_list_stacked_widget = StackedWidget(self, objectName='browser_list_stacked_widget')
 
         self.tabBar = BrowsersTabBar(self.main_config, self)
         self.tabBar.tabAddRequested.connect(self.onTabAddRequested)
@@ -110,6 +111,11 @@ class BrowserListWidget(Widget):
         self.browser_list_stacked_widget.addWidget(browser_tab)
         return browser_tab, tab
 
+    def get_tab_with_name(self, tab_name: str) -> BrowsersTab | None:
+        return next(
+            (item for item in self.browser_list_stacked_widget.get_widgets() if
+             item.get_route_key() == tab_name), None)
+
     def item_click(self, item: QListAccountsWidgetItem):
         item_widget = self.browser_list_stacked_widget.currentWidget().listWidget.itemWidget(item)
         account_name = item_widget.name
@@ -136,5 +142,3 @@ class BrowserListWidget(Widget):
         WebBrowser(base_path=self.base_path, account_name=name, logger=logger, _queue=_queue,
                    main_config=self.main_config,
                    set_locals_signal=set_locals_signal)
-
-

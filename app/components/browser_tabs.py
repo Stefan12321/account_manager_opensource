@@ -8,8 +8,8 @@ from typing import List, Callable, Union
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QPoint
-from PyQt5.QtGui import QColor, QIcon
-from PyQt5.QtWidgets import QFrame, QVBoxLayout, QListWidget
+from PyQt5.QtGui import QColor, QIcon, QKeySequence
+from PyQt5.QtWidgets import QFrame, QVBoxLayout, QListWidget, QShortcut
 from qfluentwidgets import TabBar, ListWidget, FluentIconBase, TabItem
 
 from app.common.logger import setup_logger_for_thread
@@ -66,7 +66,6 @@ class BrowsersTabBar(TabBar):
         self.hBoxLayout.setStretch(6, 0)
 
         self.hBoxLayout.insertSpacing(8, 20)
-
 
     def canDrag(self, pos: QPoint):
         if not super().canDrag(pos):
@@ -190,6 +189,8 @@ class BrowsersTab(QFrame):
         self.list_tools = AccountsListToolsWidget()
         self.list_tools.setFixedHeight(60)
         self.list_tools.CheckBox.stateChanged.connect(self.set_all_checkbox)
+        shortcut = QShortcut(QKeySequence("Ctrl+A"), self)
+        shortcut.activated.connect(lambda: self.list_tools.CheckBox.nextCheckState())
         self.list_tools.create_profile_button.clicked.connect(self.on_create_profile_btn_click)
         self.list_tools.delete_button.clicked.connect(self.delete_profiles)
         if self.objectName() != "All":
@@ -204,6 +205,9 @@ class BrowsersTab(QFrame):
         self.vBoxLayout.addWidget(self.listWidget, 1)
 
         self.update_item_list()
+
+    def get_route_key(self) -> str:
+        return self.objectName()
 
     def update_item_list(self):
         self.list_item_arr = []
@@ -409,10 +413,19 @@ class BrowsersTab(QFrame):
 
     def on_tab_dropped_account(self, account_name: str):
         tab_name = self.sender().routeKey()
+        self.add_account_to_tab(account_name, tab_name)
+
+    def add_account_to_tab(self, account_name, tab_name):
+        target_tab = self.parent_widget.get_tab_with_name(tab_name)
         if account_name not in self.main_config.config_data["tabs"]["values"][
-            tab_name] and account_name not in self.browsers_names:
-            self.browsers_names.append(account_name)
-            self.main_config.update(self.main_config.config_data)
+            tab_name] and account_name not in target_tab.browsers_names:
+            target_tab.browsers_names.append(account_name)
+            target_tab.main_config.update(target_tab.main_config.config_data)
+        target_tab.update_item_list()
+
+    def remove_account_from_tab(self, account_name: str):
+        self.browsers_names.remove(account_name)
+        self.main_config.update(self.main_config.config_data)
         self.update_item_list()
 
     def start_threads_watcher(self):
