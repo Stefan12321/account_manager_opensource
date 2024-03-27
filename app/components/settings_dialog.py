@@ -44,7 +44,7 @@ class SettingsDialog(FlyoutDialogWithButtons):
         self.user_agent_card.set_data(
             self.config.config_data["user-agent"] if "user-agent" in self.config.config_data else "")
         self.extensions_card.set_data(
-            self.config.config_data["extensions"] if "extensions" in self.config.config_data else [])
+            self.config.config_data["extensions"] if "extensions" in self.config.config_data else {})
         self.open_in_new_tab_card.set_data(
             str(self.config.config_data["default_new_tab"]) if "default_new_tab" in self.config.config_data else "")
         self.passwords_card.set_data(self.passwords if self.passwords else {})
