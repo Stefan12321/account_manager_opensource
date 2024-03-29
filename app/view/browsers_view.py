@@ -7,7 +7,7 @@ from typing import List
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtWidgets import QVBoxLayout, QStackedWidget
+from PyQt5.QtWidgets import QVBoxLayout
 from qfluentwidgets import TabItem
 
 from app.common.settings import serializer

@@ -172,7 +172,7 @@ class BrowsersTab(QFrame):
         self.parent_widget = parent
         self.is_for_all_profiles = is_for_all_profiles
         self.main_config = main_config
-        self.all_browser_names = os.listdir("profiles")
+        self.all_browser_names = os.listdir(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
         self.browsers_names = browsers_names
         self.list_item_arr: List[QListAccountsWidgetItem] = []
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
