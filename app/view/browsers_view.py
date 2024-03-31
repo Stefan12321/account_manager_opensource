@@ -2,7 +2,6 @@ import logging
 import os
 import queue
 import threading
-import time
 from typing import List
 
 from PyQt5 import QtCore
@@ -37,7 +36,8 @@ elif main_config.config_data["version"]["values"]["private"] is True:
         logging.error("You can't use this version of app")
         raise PermissionError
 else:
-    WarningDialog('Invalid version, set value "version" to "private" or "opensource" in main settings')
+    WarningDialog('Invalid version, set value "version" to "private" or "opensource" in main settings',
+                  hide_cancel_button=True).exec()
     logging.error('Invalid version, set value "version" to "private" or "opensource" in main settings')
 
 
@@ -75,7 +75,7 @@ class BrowserListWidget(Widget):
         self.tabBar.currentChanged.connect(self.onTabChanged)
 
         # init base tab
-        logo_svg = 'app/resource/logo.svg'
+        logo_svg = f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg'
         self.browser_tab_all_accounts, tab = self.addTab(
             [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
              if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")], "All", "All",
@@ -99,7 +99,7 @@ class BrowserListWidget(Widget):
         dlg = CreateTabDialog(self)
         if dlg.exec():
             text = dlg.new_account_line_edit.text()
-            self.addTab([], text, text, 'app/resource/logo.svg', True)
+            self.addTab([], text, text, f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg', True)
 
     def addTab(self, browser_names: List[str], routeKey, text, icon, from_user=False) -> tuple[BrowsersTab, TabItem]:
         tab = self.tabBar.addTab(routeKey, text, icon, None, from_user)
@@ -129,7 +129,7 @@ class BrowserListWidget(Widget):
             t.start()
             logging.info("Thread created")
         else:
-            self.show_warning("This browser is already running")
+            WarningDialog("This browser is already running", parent=self, hide_cancel_button=True).exec()
 
     def run_browser(self, name: str, _queue: queue.Queue, logger: logging.Logger, set_locals_signal: pyqtSignal):
         logger.info(f"Log file created for {name}")

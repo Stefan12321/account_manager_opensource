@@ -104,7 +104,6 @@ class MainSettings(Widget):
         self.show_message_save_settings(resp)
 
     def read_tooltips(self, path=f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/tooltips.csv") -> dict:
-        print(self.main_config.config_data["version"]["values"]["private"])
         with open(path, 'r', encoding='utf-8') as csvfile:
             csvreader = csv.DictReader(csvfile)
             tooltips = {}
@@ -218,11 +217,3 @@ class MainSettings(Widget):
     def check_for_updates(self):
         # TODO  Finish this after build release
         update_application()
-        # latest_version, _ = get_latest_release()
-        # print(latest_version)
-        # w = Dialog("Title", "This is a message notification", self)
-        #
-        # if w.exec():
-        #     print('Confirmed')
-        # else:
-        #     print('Canceled')

@@ -5,7 +5,7 @@ import pathlib
 import shutil
 from typing import List
 
-APP_VERSION = "0.66"
+APP_VERSION = "0.67"
 
 
 class Serializer:
@@ -115,7 +115,14 @@ class MainConfig(Serializer):
                 self._read_configs()
             except (FileNotFoundError, PermissionError):
                 logging.error("You can't use this version of app")
-                self.update({"version": {"opensource": True, "private": False}})
+                self.update({"version": {
+                    "type": "dropdown",
+                    "values": {
+                        "opensource": True,
+                        "private": False
+                    }
+                }, })
+                shutil.rmtree(f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/account_manager_private_part')
 
     def update(self, data: dict, path=None) -> bool:
         for _path in self.paths:

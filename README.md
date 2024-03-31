@@ -10,7 +10,7 @@ Switch docker to use Windows Containers
 
 Build with docker compose
 
-`docker-compose up`
+`docker-compose up --build`
 
 Built application will be in folder build
 ### Build manually
@@ -25,7 +25,7 @@ pip install --no-cache-dir -r requirements.txt
 ```
 Build application
 
-`python ./custom_setup.py build`
+`python -m build_tools build`
 
 Or You can use it without build
 
@@ -42,7 +42,8 @@ Or You can use it without build
 - Faked browser geolocation
 - Export/Import profiles
 - Python console for every browser
-
+- Tabs
+- Dark / Light theme
 
 ## Future Features
 
@@ -53,5 +54,5 @@ Or You can use it without build
 ### Other
 - [ ] Auto updates (on testing stage)
 - [ ] Visual scripting for browser automation (at the concept stage)
-
+- [ ] Firefox browser
 

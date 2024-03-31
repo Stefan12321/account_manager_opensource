@@ -33,18 +33,10 @@ class TabItemWithDrops(TabItem):
     def dragEnterEvent(self, e):
         e.accept()
 
-    def dragLeaveEvent(self, e):
-        print("dragLeaveEvent")
-
-    def dragMoveEvent(self, e):
-        print("dragMoveEvent")
-
     def dropEvent(self, e):
-        # print("dropEvent")
         if 'text/plain' in e.mimeData().formats():
             browser_name = e.mimeData().data('text/plain').data().decode('utf-8')
             self.dropped_browser.emit(browser_name)
-            # if browser_name not in self.br
 
 
 class BrowsersTabBar(TabBar):
@@ -229,7 +221,7 @@ class BrowsersTab(QFrame):
                                                          one_account_line_widget,
                                                          self.main_config,
                                                          self.listWidget)
-        qlist_item_one_account.setIcon(QIcon(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource/Google_icon.svg"))
+        # qlist_item_one_account.setIcon(QIcon(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/Google_Chrome_icon.svg"))
         # Set size hint
         # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(qlist_item_one_account)

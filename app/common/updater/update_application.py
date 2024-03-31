@@ -1,15 +1,14 @@
 import os
 import shutil
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QDesktopWidget
+from PyQt5.QtWidgets import QWidget, QMessageBox, QDesktopWidget
 
-from app.common.updater.base import find_path_to_file, copy_folder, get_latest_release
+from app.common.updater.base import copy_folder, get_latest_release
 
-APP_VERSION = "0.3"
+APP_VERSION = "0.67"
 FILE_IN_BASE_FOLDER = "Accounts manager.exe"
 
 

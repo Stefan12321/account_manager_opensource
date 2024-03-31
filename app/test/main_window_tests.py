@@ -4,7 +4,6 @@ from main import Window
 from PyQt5 import QtCore
 import os
 import pytest
-from app.components.create_account_dialog import CreateAccountDialog
 
 # Assuming you have a fixture to set up your main window with the CreateAccountButton
 @pytest.fixture
