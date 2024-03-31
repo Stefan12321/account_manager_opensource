@@ -58,7 +58,9 @@ def get_latest_release() -> Sequence[str] or None:
     return None
 
 
-def copy_folder(source_folder, destination_folder):
+def copy_folder(source_folder: Path, destination_folder: Path):
+    if destination_folder.exists():
+        shutil.rmtree(destination_folder)
     try:
         total_files = sum([len(files) for _, _, files in os.walk(source_folder)])
         with tqdm(total=total_files, unit="file", desc="Copy files", ) as pbar:
@@ -92,7 +94,7 @@ def install_release(target_folder: str | Path):
         for file in file_list:
             try:
                 zip_ref.extract(file,
-                                f"{target_folder}/accounts_manager")
+                                f"{target_folder}")
             except Exception as e:
                 print(f"Error: {e}")
             progress_bar.update(1)

@@ -1,6 +1,7 @@
 # coding:utf-8
 import csv
 import os
+import sys
 from typing import Dict
 
 from PyQt5 import QtWidgets
@@ -215,5 +216,7 @@ class MainSettings(Widget):
         w.exec()
 
     def check_for_updates(self):
-        # TODO  Finish this after build release
-        update_application()
+
+        if update_application():
+            self.parent().parent().close()
+            sys.exit()

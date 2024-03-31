@@ -45,7 +45,7 @@ def user_want_to_update(latest_version) -> bool:
         return False
 
 
-def update_application():
+def update_application() -> bool:
     temp = Path(tempfile.gettempdir())
     os.makedirs(f"{temp}/account_manager", exist_ok=True)
     temp_folder = f"{temp}/account_manager"
@@ -54,7 +54,7 @@ def update_application():
     latest_version = latest_version.replace("v", "")
     if latest_version and float(latest_version) > float(APP_VERSION):
         if user_want_to_update(latest_version):
-            copy_folder(f"{base_folder}/elevator", f"{temp_folder}/elevator")
+            copy_folder(Path(f"{base_folder}/elevator"), Path(f"{temp_folder}/elevator"))
             os.makedirs(f'{temp_folder}/saved_files')
             shutil.copyfile(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json",
                             f"{temp_folder}/saved_files/settings.json")

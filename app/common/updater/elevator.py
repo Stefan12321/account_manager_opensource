@@ -21,7 +21,7 @@ if __name__ == "__main__":
         temp_folder = f"{temp}/account_manager"
         elevator_folder = Path(f"{temp_folder}/elevator")
         download_release(elevator_folder, asset_id)
-        install_release(elevator_folder)
+        install_release(base_folder.parent)
         copy_settings(elevator_folder.parent, base_folder)
         print(f'{base_folder}/accounts_manager/cleaner/cleaner.exe')
         subprocess.Popen([f'{base_folder}/cleaner/cleaner.exe'], shell=True)
