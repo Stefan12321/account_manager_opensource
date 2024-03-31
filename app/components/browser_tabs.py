@@ -20,6 +20,7 @@ from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidg
 from app.components.accounts_list_tools_widget import AccountsListToolsWidget
 from app.components.create_account_dialog import CreateAccountDialog
 from app.components.progress_bar import FilesProgressBarDialog
+from app.components.thread_watcher import ThreadWatcher
 from app.components.warning_dialog import WarningDialog
 
 
@@ -202,7 +203,7 @@ class BrowsersTab(QFrame):
         return self.objectName()
 
     def update_item_list(self):
-        self.list_item_arr = []
+        self.list_item_arr: List[QListAccountsWidgetItem] = []
         self.listWidget.clear()
         for index, browser_name in enumerate(self.browsers_names):
             self.create_list_item(browser_name, index)
@@ -221,7 +222,6 @@ class BrowsersTab(QFrame):
                                                          one_account_line_widget,
                                                          self.main_config,
                                                          self.listWidget)
-        # qlist_item_one_account.setIcon(QIcon(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_RESOURCES']}/Google_Chrome_icon.svg"))
         # Set size hint
         # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(qlist_item_one_account)
@@ -421,18 +421,7 @@ class BrowsersTab(QFrame):
         self.update_item_list()
 
     def start_threads_watcher(self):
-        t = threading.Thread(target=self.threads_watcher)
-        t.start()
-
-    def threads_watcher(self):
-        while True:
-            for item in self.list_item_arr:
-                try:
-                    self.manage_animation_status(item)
-
-                except AttributeError:
-                    pass
-            time.sleep(1)
+        ThreadWatcher(self.list_item_arr, self.manage_animation_status).start()
 
     def manage_animation_status(self, item: QListAccountsWidgetItem):
         widget = self.listWidget.itemWidget(item)

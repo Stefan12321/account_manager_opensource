@@ -29,6 +29,8 @@ from app.view.browsers_view import BrowserListWidget
 from app.view.settings_view import MainSettings
 from app.common.settings.serializer import APP_VERSION
 
+from app.components.thread_watcher import terminate_thread_watchers
+
 
 class Window(FramelessWindow):
 
@@ -133,6 +135,11 @@ class Window(FramelessWindow):
 
         # !IMPORTANT: This line of code needs to be uncommented if the return button is enabled
         # qrouter.push(self.stackWidget, widget.objectName())
+
+    def close(self):
+        terminate_thread_watchers()
+        super().close()
+        sys.exit()
 
 
 if __name__ == '__main__':
