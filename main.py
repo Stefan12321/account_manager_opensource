@@ -139,7 +139,6 @@ class Window(FramelessWindow):
     def close(self):
         terminate_thread_watchers()
         super().close()
-        sys.exit()
 
 
 if __name__ == '__main__':

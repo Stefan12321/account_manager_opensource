@@ -7,7 +7,6 @@ from app.components.account_item import QListAccountsWidgetItem
 
 def terminate_thread_watchers():
     for index, th in enumerate(threading.enumerate()):
-        print(th.name)
         if isinstance(th, ThreadWatcher):
             th.stop_thread()
             th.join()

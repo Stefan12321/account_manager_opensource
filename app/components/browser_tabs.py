@@ -1,10 +1,11 @@
 import logging
 import os
+import re
 import shutil
 import threading
 import time
 import zipfile
-from typing import List, Callable, Union
+from typing import List, Callable, Union, Tuple
 
 from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import QPoint
@@ -247,12 +248,29 @@ class BrowsersTab(QFrame):
         dlg = CreateAccountDialog(self)
         dlg.show()
         result = dlg.exec()
-        account_name = dlg.new_account_line_edit.text()
+        if result:
+            account_name = dlg.new_account_line_edit.text()
+            is_valid, error_text = self.create_account_validator(account_name)
+            if is_valid:
+                self.create_profile(account_name)
+            else:
+                WarningDialog(error_text, self, hide_cancel_button=True).exec()
 
-        if result and account_name not in self.all_browser_names:
-            self.create_profile(account_name)
-        elif account_name in self.all_browser_names:
-            WarningDialog(f"Account with name {account_name} is already exist. Try different name", self).exec()
+    def create_account_validator(self, account_name: str) -> Tuple[bool, str]:
+        forbidden_symbols_pattern = r'[\\/:*?"<>|[\]]'
+        max_account_name_len = 60
+        min_account_name_len = 1
+
+        if account_name in self.all_browser_names:
+            return False, f"Account with name {account_name} is already exist. Try different name"
+        elif len(account_name) > max_account_name_len:
+            return False, f"The name is too long, use less than {max_account_name_len} characters"
+        elif len(account_name) < min_account_name_len:
+            return False, "The name can't be empty"
+        elif match := re.search(forbidden_symbols_pattern, account_name):
+            return False, f"Used a forbidden symbol {match.group()} at position {match.start()}. Do not use {forbidden_symbols_pattern} characters"
+        else:
+            return True, ""
 
     def create_profile(self, profile_name: str):
         path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"
