@@ -12,7 +12,7 @@ from selenium.common import WebDriverException
 from app.common.html_editor.main import create_html
 from app.common.user_agents import get_user_agent
 from app.common.settings.serializer import Config, MainConfig
-
+from app.common.browser.chrome_version_detector import get_chrome_version
 
 class WebBrowser:
     def __init__(self, base_path, account_name,
@@ -26,7 +26,10 @@ class WebBrowser:
         self.config = Config(fr'{self.path}\config.json')
         self.account_name = account_name
         self._queue = _queue
-        self.version_main = int(self.config_main.config_data["chrome_version"])
+        if self.config_main.config_data["auto_set_chrome_version"]:
+            self.version_main = int(get_chrome_version().split(".")[0])
+        else:
+            self.version_main = int(self.config_main.config_data["chrome_version"])
         self.onload_pages = self.config_main.config_data["onload_pages"]
         if start_browser:
             self.start_undetected_chrome()
