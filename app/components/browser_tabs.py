@@ -3,7 +3,6 @@ import os
 import re
 import shutil
 import threading
-import time
 import zipfile
 from typing import List, Callable, Union, Tuple
 
@@ -186,7 +185,7 @@ class BrowsersTab(QFrame):
         shortcut = QShortcut(QKeySequence("Ctrl+A"), self)
         shortcut.activated.connect(lambda: self.list_tools.CheckBox.nextCheckState())
         self.list_tools.create_profile_button.clicked.connect(self.on_create_profile_btn_click)
-        self.list_tools.delete_button.clicked.connect(self.delete_profiles)
+        self.list_tools.delete_button.clicked.connect(self.on_delete_profiles_button_click)
         if self.objectName() != "All":
             self.list_tools.export_button.hide()
             self.list_tools.import_button.hide()
@@ -204,7 +203,7 @@ class BrowsersTab(QFrame):
         return self.objectName()
 
     def update_item_list(self):
-        self.list_item_arr: List[QListAccountsWidgetItem] = []
+        self.list_item_arr.clear()
         self.listWidget.clear()
         for index, browser_name in enumerate(self.browsers_names):
             self.create_list_item(browser_name, index)
@@ -315,14 +314,13 @@ class BrowsersTab(QFrame):
                 profiles = list(pth.iterdir())
                 imported_accounts = [folder.name for folder in profiles]
 
-                if self.confirm_import(imported_accounts) == 1:
+                if self.confirm_import(imported_accounts):
                     self.handle_existing_accounts(imported_accounts, filenames[0])
                     self.update_item_list()
 
-    def confirm_import(self, imported_accounts: List[str]) -> int:
+    def confirm_import(self, imported_accounts: List[str]) -> bool:
         msg = WarningDialog(f"Are y sure you want to import accounts: {imported_accounts}", self)
-        msg.setWindowTitle("Warning")
-        return msg.exec()
+        return msg.exec() == 1
 
     def handle_existing_accounts(self, imported_accounts: List[str], filename):
         profile_names = os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
@@ -365,24 +363,27 @@ class BrowsersTab(QFrame):
             # TODO if forbidden is not empty then length should be shorter
             for file in zipObj.filelist:
                 if file.filename.split('/')[0] not in forbidden:
-                    zipObj.extract(file, './profiles')
+                    zipObj.extract(file, f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles')
                     counter += 1
                     self.progress_signal.emit(int(counter / (length / 100)))
                     self.progress_filename_signal.emit(file.filename)
         self.progress_exit_signal.emit()
 
-    def delete_profiles(self):
+    def on_delete_profiles_button_click(self):
         checked_items = self.get_checked_items()
 
         if len(checked_items) > 0:
             dlg = WarningDialog(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}", self)
             retval = dlg.exec()
             if retval == 1:
-                self.progress_bar_thread(self.delete_profiles_thread, "Deleting", checked_items)
-                for i in checked_items:
-                    if i.name in self.browsers_names:
-                        self.browsers_names.remove(i.name)
-                self.update_item_list()
+                self.delete_profiles(checked_items)
+
+    def delete_profiles(self, checked_items: list[QListAccountsWidgetItem]):
+        self.progress_bar_thread(self.delete_profiles_thread, "Deleting", checked_items)
+        for i in checked_items:
+            if i.name in self.browsers_names:
+                self.browsers_names.remove(i.name)
+        self.update_item_list()
 
     def delete_profiles_thread(self, checked_items: List[QListAccountsWidgetItem]):
         counter = 1
@@ -393,7 +394,6 @@ class BrowsersTab(QFrame):
             self.progress_signal.emit(int(counter / (length / 100)))
             self.progress_filename_signal.emit(profile.name)
             counter += 1
-
         self.progress_exit_signal.emit()
 
     def progress_bar_thread(self, target: Callable, title: str, *args):
@@ -442,18 +442,21 @@ class BrowsersTab(QFrame):
         ThreadWatcher(self.list_item_arr, self.manage_animation_status).start()
 
     def manage_animation_status(self, item: QListAccountsWidgetItem):
-        widget = self.listWidget.itemWidget(item)
-        if item.thread.is_alive():
-            if not widget.is_animation_running:
-                widget.start_animation()
+        try:
+            widget = self.listWidget.itemWidget(item)
+            if item.thread and item.thread.is_alive():
+                if not widget.is_animation_running:
+                    widget.start_animation()
 
-            # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-            account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
-            account_widget_item.status = True
-        else:
-            if widget.is_animation_running:
-                widget.stop_animation()
+                # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+                account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                account_widget_item.status = True
+            else:
+                if widget.is_animation_running:
+                    widget.stop_animation()
 
-            # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-            account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
-            account_widget_item.status = False
+                # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
+                account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                account_widget_item.status = False
+        except Exception as e:
+            logging.error(e)

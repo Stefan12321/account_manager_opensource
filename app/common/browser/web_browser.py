@@ -14,9 +14,11 @@ from app.common.user_agents import get_user_agent
 from app.common.settings.serializer import Config, MainConfig
 from app.common.browser.chrome_version_detector import get_chrome_version
 
+
 class WebBrowser:
     def __init__(self, base_path, account_name,
-                 logger, _queue: queue.Queue, main_config: MainConfig, set_locals_signal: pyqtSignal, start_browser=True):
+                 logger, _queue: queue.Queue, main_config: MainConfig, set_locals_signal: pyqtSignal,
+                 start_browser=True):
         self.set_locals_signal = set_locals_signal
         self.logger = logger
         self.base_dir = base_path
