@@ -1,8 +1,6 @@
 import os
 import shutil
-
 from cx_Freeze import setup, Executable
-
 from app.common.settings.serializer import Config
 
 
@@ -28,13 +26,13 @@ def build():
 
     packages = ["os", "threading", "time", "PyQt5", "selenium", "json", "undetected_chromedriver", "pycparser",
                 "account_manager_private_part"]
-
+    build_exe_options = {
+        'build_exe': BUILD_FOLDER,
+        'packages': packages,
+        'include_files': includes,
+    }
     options = {
-        'build_exe': {
-            'build_exe': BUILD_FOLDER,
-            'packages': packages,
-            'include_files': includes,
-        }
+        'build_exe': build_exe_options
     }
 
     setup(
