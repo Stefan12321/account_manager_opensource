@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QDesktopWidget
 
 from app.common.updater.base import copy_folder, get_latest_release
 
-APP_VERSION = "0.6.7"
+APP_VERSION = "0.6.8"
 FILE_IN_BASE_FOLDER = "Accounts manager.exe"
 
 
