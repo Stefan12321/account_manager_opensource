@@ -13,16 +13,25 @@
       "Light": false
     }
   },
-  "chrome_version": "122",
+  "tabs": {
+    "type": "invisible",
+    "values": {
+      "Shopping": [
+        "Nike"
+      ]
+    }
+  },
+  "chrome_version": "120",
   "debug": false,
   "default_new_tab": "",
   "onload_pages": [
     "index",
     "https://whoer.net/ru#"
   ],
+  "auto_set_chrome_version": true,
   "check_for_updates": false,
   "change_location": false,
   "set_random_window_size": false,
-  "accounts_tooltips": true,
+  "accounts_tooltips": false,
   "python_console": false
 }

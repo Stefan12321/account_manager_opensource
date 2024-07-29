@@ -5,7 +5,7 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 
 
-def test_delete_profile(qtbot, main_window, monkeypatch):
+def test_delete_profile(qtbot, open_main_tab_and_select_test_account, monkeypatch):
     class MockWarningDialog:
         def __init__(self, text: str, parent=None):
             self.result = 1
@@ -13,17 +13,16 @@ def test_delete_profile(qtbot, main_window, monkeypatch):
         def exec(self):
             return self.result
 
-    main_tab = main_window.browser_list_Interface.get_tab_with_name("All")
+    main_tab, account_name = open_main_tab_and_select_test_account
 
-    def find_and_check_test_profile():
-        for item in main_tab.list_item_arr:
-            if item.name == "TestAccount":
-                widget = main_tab.listWidget.itemWidget(item)
-                widget.CheckBox.setCheckState(QtCore.Qt.CheckState.Checked)
-
-    find_and_check_test_profile()
     monkeypatch.setattr("app.components.browser_tabs.WarningDialog", MockWarningDialog)
     qtbot.mouseClick(main_tab.list_tools.delete_button, Qt.LeftButton)
 
-    assert "TestAccount" not in main_tab.browsers_names
+    assert account_name not in main_tab.browsers_names
     assert not os.path.exists(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\TestAccount")
+
+
+def test_delete_profile_without_selecting_any_accounts(qtbot, main_window, monkeypatch):
+    main_tab = main_window.browser_list_Interface.get_tab_with_name("All")
+    qtbot.mouseClick(main_tab.list_tools.delete_button, Qt.LeftButton)
+    assert main_tab.isActiveWindow()

@@ -3,23 +3,40 @@ import os
 import sys
 
 # Check if it built app or not
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(sys.executable)
-    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/config"
-    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/resource"
+    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = (
+        f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/config"
+    )
+    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = (
+        f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/lib/app/resource"
+    )
 else:
     os.environ["ACCOUNT_MANAGER_BASE_DIR"] = os.path.dirname(os.path.realpath(__file__))
-    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config"
-    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource"
-os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json"
+    os.environ["ACCOUNT_MANAGER_PATH_TO_CONFIG"] = (
+        f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config"
+    )
+    os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"] = (
+        f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/resource"
+    )
+os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"] = (
+    f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json"
+)
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QStackedWidget, QHBoxLayout
 
-from qfluentwidgets import NavigationInterface, NavigationItemPosition, isDarkTheme, setTheme, Theme, setThemeColor
+from qfluentwidgets import (
+    NavigationInterface,
+    NavigationItemPosition,
+    isDarkTheme,
+    setTheme,
+    Theme,
+    setThemeColor,
+)
+from qframelesswindow import StandardTitleBar
 from qfluentwidgets import FluentIcon
-from qframelesswindow import FramelessWindow, StandardTitleBar
 from qframelesswindow.windows import WindowsWindowEffect
 from app.common.settings.serializer import MainConfig
 
@@ -32,20 +49,31 @@ from app.common.settings.serializer import APP_VERSION
 from app.components.thread_watcher import terminate_thread_watchers
 
 
-class Window(FramelessWindow):
+def isWin11():
+    return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
 
+
+if isWin11():
+    from qframelesswindow import FramelessWindow as Window
+else:
+    from qframelesswindow import AcrylicWindow as Window
+
+
+
+class Window(Window):
     def __init__(self):
         super().__init__()
         self.setTitleBar(StandardTitleBar(self))
-        self.windowEffect = WindowsWindowEffect(self)
-        self.windowEffect.setMicaEffect(self.winId(), isDarkTheme())
+        if isWin11():
+            self.windowEffect = WindowsWindowEffect(self)
+            self.windowEffect.setMicaEffect(self.winId(), isDarkTheme())
         if main_config.config_data["theme"]["values"]["Dark"] is True:
             setTheme(Theme.DARK)
         if main_config.config_data["theme"]["values"]["Light"] is True:
             setTheme(Theme.LIGHT)
 
         # change the theme color
-        setThemeColor('#8caaee')
+        setThemeColor("#8caaee")
 
         self.hBoxLayout = QHBoxLayout(self)
         self.navigationInterface = NavigationInterface(self, showMenuButton=True)
@@ -74,10 +102,15 @@ class Window(FramelessWindow):
         # enable acrylic effect
         # self.navigationInterface.setAcrylicEnabled(True)
 
-        self.addSubInterface(self.browser_list_Interface, FluentIcon.GLOBE, 'Browsers')
+        self.addSubInterface(self.browser_list_Interface, FluentIcon.GLOBE, "Browsers")
 
         # self.addSubInterface(self.about, FIF.INFO, 'About', NavigationItemPosition.BOTTOM)
-        self.addSubInterface(self.settingInterface, FluentIcon.SETTING, 'Settings', NavigationItemPosition.BOTTOM)
+        self.addSubInterface(
+            self.settingInterface,
+            FluentIcon.SETTING,
+            "Settings",
+            NavigationItemPosition.BOTTOM,
+        )
 
         # !IMPORTANT: don't forget to set the default route key if you enable the return button
         # qrouter.setDefaultRouteKey(self.stackWidget, self.musicInterface.objectName())
@@ -94,8 +127,10 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(900, 700)
-        self.setWindowIcon(QIcon(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg'))
-        self.setWindowTitle('Accounts manager')
+        self.setWindowIcon(
+            QIcon(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg')
+        )
+        self.setWindowTitle("Accounts manager")
         self.titleBar.setAttribute(Qt.WA_StyledBackground)
 
         desktop = QApplication.desktop().availableGeometry()
@@ -108,8 +143,15 @@ class Window(FramelessWindow):
 
         self.setQss()
 
-    def addSubInterface(self, interface, icon, text: str, position=NavigationItemPosition.TOP, parent=None):
-        """ add sub interface """
+    def addSubInterface(
+        self,
+        interface,
+        icon,
+        text: str,
+        position=NavigationItemPosition.TOP,
+        parent=None,
+    ):
+        """add sub interface"""
         self.stackWidget.addWidget(interface)
         self.navigationInterface.addItem(
             routeKey=interface.objectName(),
@@ -118,12 +160,15 @@ class Window(FramelessWindow):
             onClick=lambda: self.switchTo(interface),
             position=position,
             tooltip=text,
-            parentRouteKey=parent.objectName() if parent else None
+            parentRouteKey=parent.objectName() if parent else None,
         )
 
     def setQss(self):
-        color = 'dark' if isDarkTheme() else 'light'
-        with open(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/{color}/style.qss', encoding='utf-8') as f:
+        color = "dark" if isDarkTheme() else "light"
+        with open(
+            f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/{color}/style.qss',
+            encoding="utf-8",
+        ) as f:
             self.setStyleSheet(f.read())
 
     def switchTo(self, widget):
@@ -141,9 +186,10 @@ class Window(FramelessWindow):
         super().close()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough
+    )
     QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
 

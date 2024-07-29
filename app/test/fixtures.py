@@ -1,5 +1,8 @@
+import os
+
 import pytest
-from PyQt5.QtCore import qWarning
+import pytestqt.qtbot
+from PyQt5.QtCore import qWarning, Qt
 
 from main import Window
 
@@ -14,7 +17,7 @@ def main_window(qtbot):
 
 
 @pytest.fixture
-def create_account(main_window, qtbot, monkeypatch):
+def create_account(main_window, qtbot: pytestqt.qtbot.QtBot, monkeypatch):
     # Mock the CreateAccountDialog to simulate user interaction
     class MockLineEdit:
         def __init__(self, text):
@@ -64,3 +67,19 @@ def create_account(main_window, qtbot, monkeypatch):
 
     main_tab = main_window.browser_list_Interface.get_tab_with_name("All")
     return main_tab, MockWarningDialog, MockCreateAccountDialog
+
+
+@pytest.fixture
+def open_main_tab_and_select_test_account(main_window: Window, qtbot: pytestqt.qtbot.QtBot, monkeypatch):
+    main_tab = main_window.browser_list_Interface.get_tab_with_name("All")
+    account_name = "TestAccount"
+
+    def find_and_check_test_profile():
+        for item in main_tab.list_item_arr:
+            if item.name == account_name:
+                widget = main_tab.listWidget.itemWidget(item)
+                widget.CheckBox.setCheckState(Qt.CheckState.Checked)
+    if account_name not in os.listdir(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles"):
+        main_tab.create_profile(account_name)
+    find_and_check_test_profile()
+    return main_tab, account_name
