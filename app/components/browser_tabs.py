@@ -2,8 +2,10 @@ import logging
 import os
 import re
 import shutil
+import sys
 import threading
 import zipfile
+from pathlib import Path
 from typing import List, Callable, Union, Tuple
 
 from PyQt5 import QtWidgets, QtCore
@@ -13,7 +15,8 @@ from PyQt5.QtWidgets import QFrame, QVBoxLayout, QListWidget, QShortcut
 from qfluentwidgets import TabBar, ListWidget, FluentIconBase, TabItem
 
 from app.common.logger import setup_logger_for_thread
-from app.common.password_decryptor import do_decrypt
+if sys.platform == 'win32':
+    from app.common.password_decryptor import do_decrypt
 from app.common.settings import MainConfig, Serializer
 from app.common.user_agents import get_user_agent
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
@@ -165,11 +168,14 @@ class BrowsersTab(QFrame):
         self.parent_widget = parent
         self.is_for_all_profiles = is_for_all_profiles
         self.main_config = main_config
-        self.all_browser_names = os.listdir(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
+        self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles"
+        if not os.path.exists(self.profiles_path):
+            os.makedirs(self.profiles_path)
+        self.all_browser_names = os.listdir()
         self.browsers_names = browsers_names
         self.list_item_arr: List[QListAccountsWidgetItem] = []
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
-        self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
+
         self.setObjectName(objectName)
         self._init_layout()
         self.start_threads_watcher()
@@ -272,10 +278,14 @@ class BrowsersTab(QFrame):
             return True, ""
 
     def create_profile(self, profile_name: str):
-        path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"
+        path = Path(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles/{profile_name}")
+        print(path)
         os.makedirs(path)
         user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
-        extension_list = os.listdir(fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\extension')
+        extension_path = Path(fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/extension')
+        if not os.path.exists(extension_path):
+            os.makedirs(extension_path)
+        extension_list = os.listdir(extension_path)
         data = {
             'user-agent': user_agent_,
             "line_number": "",
@@ -286,7 +296,7 @@ class BrowsersTab(QFrame):
             "default_new_tab": self.main_config.config_data["default_new_tab"]
         }
         s = Serializer()
-        s.serialize(data, fr'{path}\config.json')
+        s.serialize(data, Path(fr'{path}/config.json'))
         self.create_list_item(profile_name, self.listWidget.count())
         self.browsers_names.append(profile_name)
         if self.objectName() != "All":
@@ -298,9 +308,10 @@ class BrowsersTab(QFrame):
         if os.path.isfile(export_path):
             os.remove(export_path)
         if len(checked_items) > 0:
-            for profile in checked_items:
-                passwords = do_decrypt(fr"{self.profiles_path}\{profile.name}")
-                logging.info(passwords)
+            if sys.platform == "win32":
+                for profile in checked_items:
+                    passwords = do_decrypt(fr"{self.profiles_path}\{profile.name}")
+                    logging.info(passwords)
             self.progress_bar_thread(self.zip_directory, "Exporting",
                                      [fr'{self.profiles_path}\{profile.name}' for profile in checked_items],
                                      export_path)

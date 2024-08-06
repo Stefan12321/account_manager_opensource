@@ -1,9 +1,13 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QDesktopWidget, QApplication
+import sys
+
+from PyQt5 import QtCore
+from PyQt5.QtWidgets import QApplication
 from qfluentwidgets import ProgressBar, BodyLabel
 
-from app.components.flyout_dialog import BaseFlyoutDialog
-
+if sys.platform == 'win32':
+    from app.components.flyout_dialog import BaseFlyoutDialog
+else:
+    from app.components.flyout_dialog_linux import BaseFlyoutDialog
 
 class ProgressBarDialog(BaseFlyoutDialog):
     def __init__(self, title: str, parent=None):

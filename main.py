@@ -37,7 +37,6 @@ from qfluentwidgets import (
 )
 from qframelesswindow import StandardTitleBar
 from qfluentwidgets import FluentIcon
-from qframelesswindow.windows import WindowsWindowEffect
 from app.common.settings.serializer import MainConfig
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
@@ -54,10 +53,10 @@ def isWin11():
 
 
 if isWin11():
+    from qframelesswindow.windows import WindowsWindowEffect
     from qframelesswindow import FramelessWindow as Window
 else:
     from qframelesswindow import AcrylicWindow as Window
-
 
 
 class Window(Window):
@@ -144,12 +143,12 @@ class Window(Window):
         self.setQss()
 
     def addSubInterface(
-        self,
-        interface,
-        icon,
-        text: str,
-        position=NavigationItemPosition.TOP,
-        parent=None,
+            self,
+            interface,
+            icon,
+            text: str,
+            position=NavigationItemPosition.TOP,
+            parent=None,
     ):
         """add sub interface"""
         self.stackWidget.addWidget(interface)
@@ -166,8 +165,8 @@ class Window(Window):
     def setQss(self):
         color = "dark" if isDarkTheme() else "light"
         with open(
-            f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/{color}/style.qss',
-            encoding="utf-8",
+                f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/{color}/style.qss',
+                encoding="utf-8",
         ) as f:
             self.setStyleSheet(f.read())
 

@@ -47,7 +47,7 @@ def get_chrome_version() -> str:
     try:
         if platform == "linux" or platform == "linux2":
             # linux
-            install_path = "/usr/bin/google-chrome"
+            install_path = "chromium"
         elif platform == "darwin":
             # OS X
             install_path = "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
@@ -65,6 +65,6 @@ def get_chrome_version() -> str:
     except Exception as ex:
         print(ex)
 
-    version = os.popen(f"{install_path} --version").read().strip('Google Chrome ').strip() if install_path else version
+    version = re.search(r"\d+.\d+.\d+.\d+",os.popen(f"{install_path} --version").read())[0] if install_path else version
 
     return version

@@ -5,9 +5,8 @@ from ctypes import cast
 import win32con
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPainter, QColor, QCursor, QIcon
-from PyQt5.QtWidgets import QDialog, QHBoxLayout, QVBoxLayout
-from qfluentwidgets import PushButton, isDarkTheme, \
-    PrimaryPushButton
+from PyQt5.QtWidgets import QDialog, QVBoxLayout
+from qfluentwidgets import isDarkTheme
 from qframelesswindow import StandardTitleBar
 from qframelesswindow.utils.win32_utils import Taskbar
 from qframelesswindow.utils import win32_utils as win_utils
@@ -169,24 +168,3 @@ class BaseFlyoutDialog(QDialog):
         painter.drawRoundedRect(self.rect(), 10, 10)
 
 
-class FlyoutDialogWithButtons(BaseFlyoutDialog):
-    def __init__(self, title: str, parent=None):
-        super().__init__(title, parent)
-        self._init_control_buttons()
-
-    def _init_control_buttons(self):
-        self.control_buttons_horizontal_layout = QHBoxLayout()
-
-        self.accept_button = PrimaryPushButton("OK")
-        self.cancel_button = PushButton("Cancel")
-
-        self.accept_button.setFixedWidth(100)
-        self.cancel_button.setFixedWidth(100)
-
-        self.control_buttons_horizontal_layout.addStretch(1)
-        self.control_buttons_horizontal_layout.addWidget(self.accept_button)
-        self.control_buttons_horizontal_layout.addWidget(self.cancel_button)
-
-        self.vBoxLayout.addLayout(self.control_buttons_horizontal_layout)
-        self.accept_button.clicked.connect(self.accept)
-        self.cancel_button.clicked.connect(self.reject)

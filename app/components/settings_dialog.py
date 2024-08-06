@@ -1,9 +1,11 @@
 import logging
 import os
 import queue
+import sys
+
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
 from app.common.settings.serializer import Config, MainConfig
-from app.components.flyout_dialog import FlyoutDialogWithButtons
+from app.components.flyout_dialog_with_buttons import FlyoutDialogWithButtons
 from app.components.setting_dialog.line_edit_card import LineEditCard
 from app.components.setting_dialog.line_edit_card_with_button import (
     LineEditCardWithButton,
@@ -11,7 +13,8 @@ from app.components.setting_dialog.line_edit_card_with_button import (
 from app.components.setting_dialog.list_widget_card import ListWidgetCard
 from app.components.setting_dialog.python_console_card import PythonConsoleCard
 from app.components.setting_dialog.tree_widget_card import TreeWidgetPasswordsCard
-from app.common.password_decryptor import do_decrypt_dict
+if sys.platform == 'win32':
+    from app.common.password_decryptor import do_decrypt_dict
 
 
 class SettingsDialog(FlyoutDialogWithButtons):
@@ -31,7 +34,8 @@ class SettingsDialog(FlyoutDialogWithButtons):
         self.path = (
             f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles/{self.account_name}'
         )
-        self.passwords = do_decrypt_dict(self.path)
+        if sys.platform == 'win32':
+            self.passwords = do_decrypt_dict(self.path)
         self.config = Config(f"{self.path}/config.json")
         self.main_config = main_config
         super().__init__(f"Settings {self.account_name}", parent)
@@ -67,7 +71,8 @@ class SettingsDialog(FlyoutDialogWithButtons):
             if "default_new_tab" in self.config.config_data
             else ""
         )
-        self.passwords_card.set_data(self.passwords if self.passwords else {})
+        if sys.platform == 'win32':
+            self.passwords_card.set_data(self.passwords if self.passwords else {})
         self.longitude_card.set_data(
             self.config.config_data["longitude"]
             if "longitude" in self.config.config_data
@@ -83,7 +88,7 @@ class SettingsDialog(FlyoutDialogWithButtons):
         extensions = self.config.config_data["extensions"]
         keys = list(self.config.config_data["extensions"])
         for extension in os.listdir(
-            rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\extension'
+            rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/extension'
         ):
             if extension in keys:
                 keys.remove(extension)
@@ -122,8 +127,10 @@ class SettingsDialog(FlyoutDialogWithButtons):
         self.right_column.addWidget(self.open_in_new_tab_card)
         if self.main_config.config_data["python_console"]:
             self.right_column.addWidget(self.python_console)
-        self.passwords_card = TreeWidgetPasswordsCard("Passwords")
-        self.left_column.addWidget(self.passwords_card)
+
+        if sys.platform == "win32":
+            self.passwords_card = TreeWidgetPasswordsCard("Passwords")
+            self.left_column.addWidget(self.passwords_card)
 
         self.vBoxLayout.addLayout(self.hBoxLayout)
         self.hBoxLayout.addLayout(self.left_column)
