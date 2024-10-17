@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Settings window for multiple profiles (the best way to change connected extensions for many browsers in a few click)
 
-<video src="assets\multiprofile_settings.mp4" width="1280"  controls></video>
+https://github.com/user-attachments/assets/51a6bbf0-69ea-43aa-b883-8d88c7a20e75
 
 - Changelog
 
