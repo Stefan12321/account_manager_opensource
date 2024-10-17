@@ -24,3 +24,7 @@ __pycache__
 /token
 /accounts_manager_opensource.pyproject
 /accounts_manager_opensource.pyproject.user
+/extension/selfproxy/
+/extension/selfproxy_old/
+/extension/selfproxyReact/
+/extension/selfproxyReactNew/
