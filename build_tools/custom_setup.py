@@ -15,14 +15,14 @@ def build():
             "Usage:\npython setup.py build #Build all\npython setup.py build_main #Build build_main\npython setup.py build_cleaner #Build build_cleaner\npython setup.py build_elevator #Build build_elevator")
         return
     cmd = sys.argv[1]
-    sys.argv[1] = "bdist_deb"
+    sys.argv[1] = "build"
     if cmd == "build" or cmd == "build_main":
         build_main()
     if cmd == "build" or cmd == "build_cleaner":
         build_cleaner()
     if cmd == "build" or cmd == "build_elevator":
         build_elevator()
-    if cmd == "build":
+    if cmd == "build" and sys.platform == "win32":
         subprocess.run([PATH_TO_INNOSETUP, PATH_TO_ISS.absolute()])
 
 
