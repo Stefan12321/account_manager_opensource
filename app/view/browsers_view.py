@@ -1,6 +1,7 @@
 import logging
 import os
 import queue
+import sys
 import threading
 from typing import List
 
@@ -17,7 +18,8 @@ from app.components.create_new_tab_dialog import CreateTabDialog
 from app.components.stacked_widget import StackedWidget
 from app.view.base_view import Widget
 from app.components.warning_dialog import WarningDialog
-from app.common.password_decryptor.passwords_decryptor import do_decrypt
+if sys.platform == 'win32':
+    from app.common.password_decryptor.passwords_decryptor import do_decrypt
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
@@ -51,13 +53,13 @@ class BrowserListWidget(Widget):
         self.main_config = main_config
         self.browser_tab_all_accounts = None
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
-        self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
+        self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles"
         try:
             self.browsers_names = [item for item in
-                                   os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
-                                   if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")]
+                                   os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
+                                   if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles/{item}")]
         except FileNotFoundError:
-            os.makedirs(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
+            os.makedirs(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
             self.browsers_names = []
         self.list_item_arr: List[QListAccountsWidgetItem] = []
 
@@ -77,8 +79,8 @@ class BrowserListWidget(Widget):
         # init base tab
         logo_svg = f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/logo.svg'
         self.browser_tab_all_accounts, tab = self.addTab(
-            [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
-             if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{item}")], "All", "All",
+            [item for item in os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
+             if os.path.isdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles/{item}")], "All", "All",
             logo_svg)
         tab.closeButton.hide()
 
@@ -133,10 +135,11 @@ class BrowserListWidget(Widget):
 
     def run_browser(self, name: str, _queue: queue.Queue, logger: logging.Logger, set_locals_signal: pyqtSignal):
         logger.info(f"Log file created for {name}")
-        try:
-            do_decrypt(fr"{self.base_path}\profiles\{name}")
-        except Exception as e:
-            logging.error(f"Passwords decrypt error: {e}")
+        if sys.platform == "win32":
+            try:
+                do_decrypt(fr"{self.base_path}/profiles\{name}")
+            except Exception as e:
+                logging.error(f"Passwords decrypt error: {e}")
 
         logger.info(f"Browser {name} started")
         WebBrowser(base_path=self.base_path, account_name=name, logger=logger, _queue=_queue,

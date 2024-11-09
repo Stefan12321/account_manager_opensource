@@ -22,7 +22,7 @@ def build():
         build_cleaner()
     if cmd == "build" or cmd == "build_elevator":
         build_elevator()
-    if cmd == "build":
+    if cmd == "build" and sys.platform == "win32":
         subprocess.run([PATH_TO_INNOSETUP, PATH_TO_ISS.absolute()])
 
 

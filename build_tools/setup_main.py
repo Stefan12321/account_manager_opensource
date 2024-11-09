@@ -1,4 +1,4 @@
-import os
+import os, sys
 import shutil
 from cx_Freeze import setup, Executable
 from app.common.settings.serializer import Config
@@ -10,14 +10,13 @@ def build():
     icon_path = f"{APP_FOLDER}/resource/logo.ico"
     try:
         shutil.rmtree('build')
-        shutil.rmtree('dist')
     except Exception as e:
         print(f"[ERROR] {e}")
     base = None
 
     executables = [
         Executable("main.py",
-                   target_name='Accounts manager.exe',
+                   target_name='Accounts manager.exe' if sys.platform == "win32" else 'Accounts manager',
                    base=base,
                    icon=icon_path),
     ]

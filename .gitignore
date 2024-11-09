@@ -5,7 +5,6 @@ __pycache__
 .idea
 /openai_key.json
 /logs/
-/build/
 /extension/2captcha/
 /extension/anticaptcha-plugin_v0.63/
 /extension/chrome_extension_fcc-master/
@@ -24,3 +23,9 @@ __pycache__
 /token
 /accounts_manager_opensource.pyproject
 /accounts_manager_opensource.pyproject.user
+/extension/selfproxy/
+/extension/selfproxy_old/
+/extension/selfproxyReact/
+/extension/selfproxyReactNew/
+/dist/
+/build/

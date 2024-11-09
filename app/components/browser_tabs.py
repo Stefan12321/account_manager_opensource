@@ -2,8 +2,10 @@ import logging
 import os
 import re
 import shutil
+import sys
 import threading
 import zipfile
+from pathlib import Path
 from typing import List, Callable, Union, Tuple
 
 from PyQt5 import QtWidgets, QtCore
@@ -13,7 +15,10 @@ from PyQt5.QtWidgets import QFrame, QVBoxLayout, QListWidget, QShortcut
 from qfluentwidgets import TabBar, ListWidget, FluentIconBase, TabItem
 
 from app.common.logger import setup_logger_for_thread
-from app.common.password_decryptor import do_decrypt
+from app.components.settings_dialog import SettingsDialog, AllSettingsDialog
+
+if sys.platform == "win32":
+    from app.common.password_decryptor import do_decrypt
 from app.common.settings import MainConfig, Serializer
 from app.common.user_agents import get_user_agent
 from app.components.account_item import QWidgetOneAccountLine, QListAccountsWidgetItem
@@ -35,13 +40,14 @@ class TabItemWithDrops(TabItem):
         e.accept()
 
     def dropEvent(self, e):
-        if 'text/plain' in e.mimeData().formats():
-            browser_name = e.mimeData().data('text/plain').data().decode('utf-8')
+        if "text/plain" in e.mimeData().formats():
+            browser_name = e.mimeData().data("text/plain").data().decode("utf-8")
             self.dropped_browser.emit(browser_name)
 
 
 class BrowsersTabBar(TabBar):
-    """ Title bar with icon and title """
+    """Title bar with icon and title"""
+
     dropped_browser_to_tab = QtCore.pyqtSignal(str, TabItemWithDrops)
 
     def __init__(self, main_config: MainConfig, parent=None):
@@ -51,7 +57,9 @@ class BrowsersTabBar(TabBar):
         self.setMovable(True)
         self.setTabMaximumWidth(220)
         self.setTabShadowEnabled(False)
-        self.setTabSelectedBackgroundColor(QColor(255, 255, 255, 125), QColor(255, 255, 255, 50))
+        self.setTabSelectedBackgroundColor(
+            QColor(255, 255, 255, 125), QColor(255, 255, 255, 50)
+        )
 
         self.tabCloseRequested.connect(self.removeTab)
         self.currentChanged.connect(lambda i: print(self.tabText(i)))
@@ -67,19 +75,20 @@ class BrowsersTabBar(TabBar):
         pos.setX(pos.x() - self.x())
         return not self.tabRegion().contains(pos)
 
-    def addTab(self, routeKey: str, text: str, icon: Union[QIcon, str, FluentIconBase] = None, onClick=None,
-               from_user=False):
+    def addTab(
+        self,
+        routeKey: str,
+        text: str,
+        icon: Union[QIcon, str, FluentIconBase] = None,
+        onClick=None,
+        from_user=False,
+    ):
         if from_user:
             if "tabs" in self.main_config.config_data:
                 data = self.main_config.config_data
                 data["tabs"]["values"].update({text: []})
             else:
-                data = {"tabs": {
-                    "type": "invisible",
-                    "values": {
-                        text: []
-                    }
-                }}
+                data = {"tabs": {"type": "invisible", "values": {text: []}}}
             self.main_config.update(data)
         return super().addTab(routeKey, text, icon, onClick)
 
@@ -88,9 +97,15 @@ class BrowsersTabBar(TabBar):
         self.main_config.update(self.main_config.config_data)
         super().removeTab(index)
 
-    def insertTab(self, index: int, routeKey: str, text: str, icon: Union[QIcon, str, FluentIconBase] = None,
-                  onClick=None):
-        """ insert tab
+    def insertTab(
+        self,
+        index: int,
+        routeKey: str,
+        text: str,
+        icon: Union[QIcon, str, FluentIconBase] = None,
+        onClick=None,
+    ):
+        """insert tab
 
         Parameters
         ----------
@@ -130,7 +145,8 @@ class BrowsersTabBar(TabBar):
         item.setShadowEnabled(self.isTabShadowEnabled())
         item.setCloseButtonDisplayMode(self.closeButtonDisplayMode)
         item.setSelectedBackgroundColor(
-            self.lightSelectedBackgroundColor, self.darkSelectedBackgroundColor)
+            self.lightSelectedBackgroundColor, self.darkSelectedBackgroundColor
+        )
 
         item.pressed.connect(self._onItemPressed)
         item.closed.connect(lambda: self.tabCloseRequested.emit(self.items.index(item)))
@@ -159,33 +175,46 @@ class BrowsersTab(QFrame):
 
     """ Tab interface """
 
-    def __init__(self, main_config: MainConfig, browsers_names: List[str], objectName,
-                 parent=None, is_for_all_profiles=False):
+    def __init__(
+        self,
+        main_config: MainConfig,
+        browsers_names: List[str],
+        objectName,
+        parent=None,
+        is_for_all_profiles=False,
+    ):
         super().__init__(parent=parent)
         self.parent_widget = parent
         self.is_for_all_profiles = is_for_all_profiles
         self.main_config = main_config
-        self.all_browser_names = os.listdir(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles")
+        self.profiles_path = rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles"
+        if not os.path.exists(self.profiles_path):
+            os.makedirs(self.profiles_path)
+        self.all_browser_names = os.listdir()
         self.browsers_names = browsers_names
         self.list_item_arr: List[QListAccountsWidgetItem] = []
-        self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
-        self.profiles_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
+        self.base_path = rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
+
         self.setObjectName(objectName)
         self._init_layout()
         self.start_threads_watcher()
 
     def _init_layout(self):
-
         self.vBoxLayout = QVBoxLayout(self)
         self.listWidget = ListWidget()
         self.listWidget.setDragDropMode(QListWidget.DragOnly)
         self.list_tools = AccountsListToolsWidget()
         self.list_tools.setFixedHeight(60)
         self.list_tools.CheckBox.stateChanged.connect(self.set_all_checkbox)
+        self.list_tools.all_settings_button.clicked.connect(self.open_all_settings)
         shortcut = QShortcut(QKeySequence("Ctrl+A"), self)
         shortcut.activated.connect(lambda: self.list_tools.CheckBox.nextCheckState())
-        self.list_tools.create_profile_button.clicked.connect(self.on_create_profile_btn_click)
-        self.list_tools.delete_button.clicked.connect(self.on_delete_profiles_button_click)
+        self.list_tools.create_profile_button.clicked.connect(
+            self.on_create_profile_btn_click
+        )
+        self.list_tools.delete_button.clicked.connect(
+            self.on_delete_profiles_button_click
+        )
         if self.objectName() != "All":
             self.list_tools.export_button.hide()
             self.list_tools.import_button.hide()
@@ -213,15 +242,18 @@ class BrowsersTab(QFrame):
         self.update_item_list()
 
     def create_list_item(self, name: str, index: int):
-        path = os.environ['ACCOUNT_MANAGER_BASE_DIR']
+        path = os.environ["ACCOUNT_MANAGER_BASE_DIR"]
         logger = setup_logger_for_thread(path, name)
-        one_account_line_widget = QWidgetOneAccountLine(name, self.main_config, logger, index, self)
-        one_account_line_widget.account_name_label.name_changed.connect(self.account_name_changed)
+        one_account_line_widget = QWidgetOneAccountLine(
+            name, self.main_config, logger, index, self
+        )
+        one_account_line_widget.account_name_label.name_changed.connect(
+            self.account_name_changed
+        )
 
-        qlist_item_one_account = QListAccountsWidgetItem(name,
-                                                         one_account_line_widget,
-                                                         self.main_config,
-                                                         self.listWidget)
+        qlist_item_one_account = QListAccountsWidgetItem(
+            name, one_account_line_widget, self.main_config, self.listWidget
+        )
         # Set size hint
         # Add QListWidgetItem into QListWidget
         self.listWidget.addItem(qlist_item_one_account)
@@ -261,32 +293,49 @@ class BrowsersTab(QFrame):
         min_account_name_len = 1
 
         if account_name in self.all_browser_names:
-            return False, f"Account with name {account_name} is already exist. Try different name"
+            return (
+                False,
+                f"Account with name {account_name} is already exist. Try different name",
+            )
         elif len(account_name) > max_account_name_len:
-            return False, f"The name is too long, use less than {max_account_name_len} characters"
+            return (
+                False,
+                f"The name is too long, use less than {max_account_name_len} characters",
+            )
         elif len(account_name) < min_account_name_len:
             return False, "The name can't be empty"
         elif match := re.search(forbidden_symbols_pattern, account_name):
-            return False, f"Used a forbidden symbol {match.group()} at position {match.start()}. Do not use {forbidden_symbols_pattern} characters"
+            return (
+                False,
+                f"Used a forbidden symbol {match.group()} at position {match.start()}. Do not use {forbidden_symbols_pattern} characters",
+            )
         else:
             return True, ""
 
     def create_profile(self, profile_name: str):
-        path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\{profile_name}"
+        path = Path(
+            rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles/{profile_name}"
+        )
+        print(path)
         os.makedirs(path)
-        user_agent_ = get_user_agent(os=("win"), navigator=("chrome"), device_type=("desktop"))
-        extension_list = os.listdir(fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\extension')
+        user_agent_ = get_user_agent(
+            os=("win"), navigator=("chrome"), device_type=("desktop")
+        )
+        extension_path = Path(rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/extension')
+        if not os.path.exists(extension_path):
+            os.makedirs(extension_path)
+        extension_list = os.listdir(extension_path)
         data = {
-            'user-agent': user_agent_,
+            "user-agent": user_agent_,
             "line_number": "",
             "proxy": "",
             "latitude": "",
             "longitude": "",
             "extensions": {key: False for key in extension_list},
-            "default_new_tab": self.main_config.config_data["default_new_tab"]
+            "default_new_tab": self.main_config.config_data["default_new_tab"],
         }
         s = Serializer()
-        s.serialize(data, fr'{path}\config.json')
+        s.serialize(data, Path(rf"{path}/config.json"))
         self.create_list_item(profile_name, self.listWidget.count())
         self.browsers_names.append(profile_name)
         if self.objectName() != "All":
@@ -294,16 +343,20 @@ class BrowsersTab(QFrame):
 
     def export_profiles(self):
         checked_items = self.get_checked_items()
-        export_path = fr"{self.base_path}\export.zip"
+        export_path = rf"{self.base_path}\export.zip"
         if os.path.isfile(export_path):
             os.remove(export_path)
         if len(checked_items) > 0:
-            for profile in checked_items:
-                passwords = do_decrypt(fr"{self.profiles_path}\{profile.name}")
-                logging.info(passwords)
-            self.progress_bar_thread(self.zip_directory, "Exporting",
-                                     [fr'{self.profiles_path}\{profile.name}' for profile in checked_items],
-                                     export_path)
+            if sys.platform == "win32":
+                for profile in checked_items:
+                    passwords = do_decrypt(rf"{self.profiles_path}\{profile.name}")
+                    logging.info(passwords)
+            self.progress_bar_thread(
+                self.zip_directory,
+                "Exporting",
+                [rf"{self.profiles_path}\{profile.name}" for profile in checked_items],
+                export_path,
+            )
 
     def import_profiles(self):
         dlg = QtWidgets.QFileDialog()
@@ -319,51 +372,62 @@ class BrowsersTab(QFrame):
                     self.update_item_list()
 
     def confirm_import(self, imported_accounts: List[str]) -> bool:
-        msg = WarningDialog(f"Are y sure you want to import accounts: {imported_accounts}", self)
+        msg = WarningDialog(
+            f"Are y sure you want to import accounts: {imported_accounts}", self
+        )
         return msg.exec() == 1
 
     def handle_existing_accounts(self, imported_accounts: List[str], filename):
-        profile_names = os.listdir(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles")
+        profile_names = os.listdir(
+            rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles"
+        )
         same_items = [item for item in profile_names if item in imported_accounts]
         not_same_items = [item for item in imported_accounts if item not in same_items]
         self.browsers_names += not_same_items
         if len(same_items) > 0:
-            msg = WarningDialog(f"Accounts {same_items} is already exist. Overwrite?", self)
+            msg = WarningDialog(
+                f"Accounts {same_items} is already exist. Overwrite?", self
+            )
             retval = msg.exec()
             if retval == 1:
                 self.progress_bar_thread(self.extract_zip, "Importing", filename)
             else:
-                self.progress_bar_thread(self.extract_zip, "Importing", filename, same_items)
+                self.progress_bar_thread(
+                    self.extract_zip, "Importing", filename, same_items
+                )
         else:
             self.progress_bar_thread(self.extract_zip, "Importing", filename)
 
     def zip_directory(self, folders_path: list, zip_path: str):
         counter = 1
-        with zipfile.ZipFile(zip_path, mode='w') as zipf:
+        with zipfile.ZipFile(zip_path, mode="w") as zipf:
             length = len(folders_path)
             for folder_path in folders_path:
-                base_folder = folder_path.split('\\')[-1]
+                base_folder = folder_path.split("\\")[-1]
                 self.progress_signal.emit(int(counter / (length / 100)))
                 self.progress_filename_signal.emit(base_folder)
                 len_dir_path = len(folder_path)
                 for root, _, files in os.walk(folder_path):
                     for file in files:
                         file_path = os.path.join(root, file)
-                        zipf.write(file_path, f'{base_folder}/{file_path[len_dir_path:]}')
+                        zipf.write(
+                            file_path, f"{base_folder}/{file_path[len_dir_path:]}"
+                        )
                 counter += 1
         self.progress_exit_signal.emit()
 
     def extract_zip(self, path: str, forbidden=None):
-
         if forbidden is None:
             forbidden = []
-        with zipfile.ZipFile(path, 'r') as zipObj:
+        with zipfile.ZipFile(path, "r") as zipObj:
             counter = 0
             length = len(zipObj.filelist)
             # TODO if forbidden is not empty then length should be shorter
             for file in zipObj.filelist:
-                if file.filename.split('/')[0] not in forbidden:
-                    zipObj.extract(file, f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles')
+                if file.filename.split("/")[0] not in forbidden:
+                    zipObj.extract(
+                        file, f'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles'
+                    )
                     counter += 1
                     self.progress_signal.emit(int(counter / (length / 100)))
                     self.progress_filename_signal.emit(file.filename)
@@ -373,7 +437,10 @@ class BrowsersTab(QFrame):
         checked_items = self.get_checked_items()
 
         if len(checked_items) > 0:
-            dlg = WarningDialog(f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}", self)
+            dlg = WarningDialog(
+                f"Are y sure you want to delete accounts: {[i.name for i in checked_items]}",
+                self,
+            )
             retval = dlg.exec()
             if retval == 1:
                 self.delete_profiles(checked_items)
@@ -389,7 +456,7 @@ class BrowsersTab(QFrame):
         counter = 1
         length = len(checked_items)
         for profile in checked_items:
-            shutil.rmtree(path=fr'{self.profiles_path}\{profile.name}')
+            shutil.rmtree(path=rf"{self.profiles_path}\{profile.name}")
             self.listWidget.removeItemWidget(profile)
             self.progress_signal.emit(int(counter / (length / 100)))
             self.progress_filename_signal.emit(profile.name)
@@ -427,8 +494,10 @@ class BrowsersTab(QFrame):
 
     def add_account_to_tab(self, account_name, tab_name):
         target_tab = self.parent_widget.get_tab_with_name(tab_name)
-        if account_name not in self.main_config.config_data["tabs"]["values"][
-            tab_name] and account_name not in target_tab.browsers_names:
+        if (
+            account_name not in self.main_config.config_data["tabs"]["values"][tab_name]
+            and account_name not in target_tab.browsers_names
+        ):
             target_tab.browsers_names.append(account_name)
             target_tab.main_config.update(target_tab.main_config.config_data)
         target_tab.update_item_list()
@@ -449,14 +518,25 @@ class BrowsersTab(QFrame):
                     widget.start_animation()
 
                 # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-                account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                account_widget_item = [
+                    item for item in self.list_item_arr if item.name == widget.name
+                ][0]
                 account_widget_item.status = True
             else:
                 if widget.is_animation_running:
                     widget.stop_animation()
 
                 # search account_widget_item with widget = current widget. WARNING! Work only if accounts names are not repeated
-                account_widget_item = [item for item in self.list_item_arr if item.name == widget.name][0]
+                account_widget_item = [
+                    item for item in self.list_item_arr if item.name == widget.name
+                ][0]
                 account_widget_item.status = False
         except Exception as e:
             logging.error(e)
+
+    def open_all_settings(self) -> None:
+        account_names = [item.name for item in self.get_checked_items()]
+        dlg = AllSettingsDialog(main_config=self.main_config,
+                             account_names=account_names)
+        dlg.show()
+        dlg.exec()

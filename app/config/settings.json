@@ -15,11 +15,7 @@
   },
   "tabs": {
     "type": "invisible",
-    "values": {
-      "Shopping": [
-        "Nike"
-      ]
-    }
+    "values": {}
   },
   "chrome_version": "120",
   "debug": false,
@@ -33,5 +29,5 @@
   "change_location": false,
   "set_random_window_size": false,
   "accounts_tooltips": false,
-  "python_console": false
+  "python_console": true
 }

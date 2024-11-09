@@ -1,6 +1,7 @@
 import os
 import queue
 import random
+import sys
 
 import screeninfo
 import selenium
@@ -22,10 +23,10 @@ class WebBrowser:
         self.set_locals_signal = set_locals_signal
         self.logger = logger
         self.base_dir = base_path
-        self.path = fr"{self.base_dir}\profiles\{account_name}"
+        self.path = fr"{self.base_dir}/profiles/{account_name}"
         self.logger.info(fr"PATH {self.path}")
         self.config_main = main_config
-        self.config = Config(fr'{self.path}\config.json')
+        self.config = Config(fr'{self.path}/config.json')
         self.account_name = account_name
         self._queue = _queue
         if self.config_main.config_data["auto_set_chrome_version"]:
@@ -59,7 +60,7 @@ class WebBrowser:
         options.add_argument("--no-first-run")
         if "extensions" in self.config.config_data:
             extensions = ','.join(
-                fr'{base_dir}\extension\{key}' for key in self.config.config_data["extensions"].keys() if
+                fr'{base_dir}/extension/{key}' for key in self.config.config_data["extensions"].keys() if
                 self.config.config_data["extensions"][key] is True)
             options.add_argument(fr'--load-extension={extensions}')
         options.add_argument(f"--user-agent={user_agent_}")
@@ -120,13 +121,14 @@ class WebBrowser:
 
     def open_onload_pages(self, driver: undetected_chromedriver.Chrome):
         index = f"{self.path}/init.html"
+
         for page in self.onload_pages:
             if page == "index":
-                if os.path.exists(index):
-                    driver.get(index)
-                else:
+                if not os.path.exists(index):
                     create_html(index, self.account_name)
-                    driver.get(index)
+                if sys.platform == "linux":
+                    index = f"file://{index}"
+                driver.get(index)
             else:
                 try:
                     driver.execute_script(f"window.open('{page}', '_blank')")

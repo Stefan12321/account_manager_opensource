@@ -10,7 +10,7 @@ APP_VERSION = "0.6.8"
 
 class Serializer:
 
-    def serialize(self, data: dict, path: str) -> None:
+    def serialize(self, data: dict, path: str | pathlib.Path) -> None:
         """
         :param path: path to config.json
         :param data: dict of settings
@@ -24,7 +24,7 @@ class Serializer:
             except Exception as e:
                 print(e)
 
-    def deserialize(self, path: str) -> dict:
+    def deserialize(self, path: str | pathlib.Path) -> dict:
         """
         :return: list of deserialized data from config.json
         """
@@ -33,7 +33,7 @@ class Serializer:
 
         return data
 
-    def update(self, data: dict, path: str) -> bool:
+    def update(self, data: dict, path: str | pathlib.Path) -> bool:
         try:
             old_data = self.deserialize(path)
             old_data.update(data)
@@ -45,7 +45,7 @@ class Serializer:
 
 
 class Config(Serializer):
-    def __init__(self, path: str):
+    def __init__(self, path: str | pathlib.Path):
         self.path = path
         self.config_data = {}
         self._read_config()
