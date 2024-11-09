@@ -8,11 +8,11 @@ def build():
     APP_FOLDER = "app"
     BUILD_FOLDER = "build/accounts_manager"
     icon_path = f"{APP_FOLDER}/resource/logo.ico"
-    try:
-        shutil.rmtree('build')
-        shutil.rmtree('dist')
-    except Exception as e:
-        print(f"[ERROR] {e}")
+    # try:
+        # shutil.rmtree('build')
+        # shutil.rmtree('dist')
+    # except Exception as e:
+    #     print(f"[ERROR] {e}")
     base = None
 
     executables = [

@@ -15,7 +15,7 @@ def build():
             "Usage:\npython setup.py build #Build all\npython setup.py build_main #Build build_main\npython setup.py build_cleaner #Build build_cleaner\npython setup.py build_elevator #Build build_elevator")
         return
     cmd = sys.argv[1]
-    sys.argv[1] = "build"
+    sys.argv[1] = "bdist_deb"
     if cmd == "build" or cmd == "build_main":
         build_main()
     if cmd == "build" or cmd == "build_cleaner":
