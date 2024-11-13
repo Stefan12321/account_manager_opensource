@@ -31,8 +31,10 @@ class WebBrowser:
         self._queue = _queue
         if self.config_main.config_data["auto_set_chrome_version"]:
             self.version_main = int(get_chrome_version().split(".")[0])
+            
         else:
             self.version_main = int(self.config_main.config_data["chrome_version"])
+        
         self.onload_pages = self.config_main.config_data["onload_pages"]
         if start_browser:
             self.start_undetected_chrome()

@@ -24,7 +24,6 @@ class ThreadWatcher(threading.Thread):
             for item in self.list_item_arr:
                 try:
                     self.manage_animation_status(item)
-
                 except AttributeError:
                     pass
             time.sleep(1)

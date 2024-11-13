@@ -18,8 +18,9 @@ from app.components.create_new_tab_dialog import CreateTabDialog
 from app.components.stacked_widget import StackedWidget
 from app.view.base_view import Widget
 from app.components.warning_dialog import WarningDialog
-if sys.platform == 'win32':
-    from app.common.password_decryptor.passwords_decryptor import do_decrypt
+from app.common.browser.chrome_version_detector import ChromeNotFoundError
+from app.common.browser.browser_thread import BrowserThread
+
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
@@ -47,9 +48,11 @@ class BrowserListWidget(Widget):
     progress_signal = QtCore.pyqtSignal(int)
     progress_exit_signal = QtCore.pyqtSignal()
     progress_filename_signal = QtCore.pyqtSignal(str)
+    thread_exception_signal = QtCore.pyqtSignal(str)
 
     def __init__(self, main_config: MainConfig, parent=None):
         super().__init__("browser-list", parent=parent)
+        self.parent = parent
         self.main_config = main_config
         self.browser_tab_all_accounts = None
         self.base_path = fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}"
@@ -66,6 +69,9 @@ class BrowserListWidget(Widget):
         self.setObjectName("BrowserListWidget")
 
         self.__init_layout()
+
+        
+        self.thread_exception_signal.connect(self.on_thread_exception)
 
     def __init_layout(self):
         self.vBoxLayout = QVBoxLayout(self)
@@ -125,7 +131,7 @@ class BrowserListWidget(Widget):
         if item.status is not True:
             _queue = queue.Queue()
             locals_signal = item.widget.locals_signal
-            t = threading.Thread(target=self.run_browser, args=(account_name, _queue, logger, locals_signal))
+            t = BrowserThread(account_name, _queue, logger, locals_signal, self.base_path, self.main_config, self.thread_exception_signal)
             item.thread = t
             item.widget._queue = _queue
             t.start()
@@ -133,15 +139,5 @@ class BrowserListWidget(Widget):
         else:
             WarningDialog("This browser is already running", parent=self, hide_cancel_button=True).exec()
 
-    def run_browser(self, name: str, _queue: queue.Queue, logger: logging.Logger, set_locals_signal: pyqtSignal):
-        logger.info(f"Log file created for {name}")
-        if sys.platform == "win32":
-            try:
-                do_decrypt(fr"{self.base_path}/profiles\{name}")
-            except Exception as e:
-                logging.error(f"Passwords decrypt error: {e}")
-
-        logger.info(f"Browser {name} started")
-        WebBrowser(base_path=self.base_path, account_name=name, logger=logger, _queue=_queue,
-                   main_config=self.main_config,
-                   set_locals_signal=set_locals_signal)
+    def on_thread_exception(self, exception_text: str):
+        WarningDialog(exception_text, parent=self, hide_cancel_button=True).exec()
