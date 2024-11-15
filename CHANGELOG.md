@@ -3,6 +3,11 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
+## [0.6.10] - 2024-11-15
+
+### Added
+
+- Linux support
 
 ## [0.6.9] - 2024-10-17
 

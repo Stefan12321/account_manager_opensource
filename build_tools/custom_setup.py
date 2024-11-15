@@ -10,7 +10,7 @@ PATH_TO_INNOSETUP = Path("D:\Inno Setup 6\ISCC.exe")
 PATH_TO_ISS = Path("./install.iss")
 
 def build():
-    if len(sys.argv) < 2 or sys.argv[1] not in ["build", "build_main", "build_cleaner", "build_elevator"]:
+    if len(sys.argv) < 2 or sys.argv[1] not in ["build", "build_main", "build_cleaner", "build_elevator", "build_msi"]:
         print(
             "Usage:\npython setup.py build #Build all\npython setup.py build_main #Build build_main\npython setup.py build_cleaner #Build build_cleaner\npython setup.py build_elevator #Build build_elevator")
         return
@@ -22,7 +22,7 @@ def build():
         build_cleaner()
     if cmd == "build" or cmd == "build_elevator":
         build_elevator()
-    if cmd == "build" and sys.platform == "win32":
+    if cmd in ["build", "build_msi"] and sys.platform == "win32":
         subprocess.run([PATH_TO_INNOSETUP, PATH_TO_ISS.absolute()])
 
 
