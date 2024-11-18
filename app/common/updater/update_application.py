@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QDesktopWidget
 
 from app.common.updater.base import copy_folder, get_latest_release
 
-APP_VERSION = "0.6.8"
+APP_VERSION = "0.6.10"
 FILE_IN_BASE_FOLDER = "Accounts manager.exe"
 
 
@@ -51,8 +51,8 @@ def update_application() -> bool:
     temp_folder = f"{temp}/account_manager"
     base_folder = os.environ["ACCOUNT_MANAGER_BASE_DIR"]
     latest_version, _ = get_latest_release()
-    latest_version = latest_version.replace("v", "")
-    if latest_version and float(latest_version) > float(APP_VERSION):
+    latest_version = latest_version.replace("v", "").replace(".", "")
+    if latest_version and int(latest_version) > int(APP_VERSION):
         if user_want_to_update(latest_version):
             copy_folder(Path(f"{base_folder}/elevator"), Path(f"{temp_folder}/elevator"))
             os.makedirs(f'{temp_folder}/saved_files')
