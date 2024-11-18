@@ -9,6 +9,11 @@ import os
 import re
 from sys import platform
 
+class ChromeNotFoundError(Exception):
+    
+    def __init__(self):
+        message = "Chrome not found, please install Google Chrome if you using windows or Chromium if you using Linux"
+        super().__init__(message)
 
 def extract_version_registry(output: str) -> str | None:
     try:
@@ -64,7 +69,13 @@ def get_chrome_version() -> str:
                 version = extract_version_folder()
     except Exception as ex:
         print(ex)
-
-    version = re.search(r"\d+.\d+.\d+.\d+",os.popen(f"{install_path} --version").read())[0] if install_path else version
-
+    if install_path:
+        match = re.search(r"\d+.\d+.\d+.\d+",os.popen(f"{install_path} --version").read())
+       
+        if not match:
+            print("match",match)
+            raise ChromeNotFoundError()
+        else:
+            version = match[0]
+        
     return version

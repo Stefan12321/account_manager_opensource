@@ -48,16 +48,22 @@ from app.common.settings.serializer import APP_VERSION
 from app.components.thread_watcher import terminate_thread_watchers
 
 
+
+
+def isWin():
+    return sys.platform == "win32"
+
 def isWin11():
-    return sys.platform == "win32" and sys.getwindowsversion().build >= 22000
+    return isWin() and sys.getwindowsversion().build >= 22000
 
 
-if isWin11():
-    from qframelesswindow.windows import WindowsWindowEffect
+if isWin():
     from qframelesswindow import FramelessWindow as Window
 else:
     from qframelesswindow import AcrylicWindow as Window
 
+if isWin11():
+    from qframelesswindow.windows import WindowsWindowEffect
 
 class Window(Window):
     def __init__(self):
