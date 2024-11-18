@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -8,7 +9,9 @@ from PyQt5.QtWidgets import QWidget, QMessageBox, QDesktopWidget
 
 from app.common.updater.base import copy_folder, get_latest_release
 
-APP_VERSION = "0.6.10"
+from app.common.settings.app_version import APP_VERSION
+from app.components.warning_dialog import WarningDialog
+
 FILE_IN_BASE_FOLDER = "Accounts manager.exe"
 
 
@@ -46,19 +49,19 @@ def user_want_to_update(latest_version) -> bool:
 
 
 def update_application() -> bool:
-    temp = Path(tempfile.gettempdir())
-    os.makedirs(f"{temp}/account_manager", exist_ok=True)
-    temp_folder = f"{temp}/account_manager"
     base_folder = os.environ["ACCOUNT_MANAGER_BASE_DIR"]
     latest_version, _ = get_latest_release()
-    latest_version = latest_version.replace("v", "").replace(".", "")
-    if latest_version and int(latest_version) > int(APP_VERSION):
+    latest_version = re.sub(r"\D", "", latest_version)
+    current_version = re.sub(r"\D", "", APP_VERSION)
+    if latest_version and int(latest_version) > int(current_version):
         if user_want_to_update(latest_version):
+            temp = Path(tempfile.gettempdir())
+            os.makedirs(f"{temp}/account_manager", exist_ok=True)
+            temp_folder = f"{temp}/account_manager"
             copy_folder(Path(f"{base_folder}/elevator"), Path(f"{temp_folder}/elevator"))
             os.makedirs(f'{temp_folder}/saved_files')
             shutil.copyfile(f"{os.environ['ACCOUNT_MANAGER_PATH_TO_CONFIG']}/settings.json",
                             f"{temp_folder}/saved_files/settings.json")
             subprocess.Popen([f'{temp_folder}/elevator/elevator.exe', base_folder], shell=True)
             return True
-
     return False

@@ -43,7 +43,7 @@ main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 
 from app.view.browsers_view import BrowserListWidget
 from app.view.settings_view import MainSettings
-from app.common.settings.serializer import APP_VERSION
+from app.common.settings.app_version import APP_VERSION
 
 from app.components.thread_watcher import terminate_thread_watchers
 

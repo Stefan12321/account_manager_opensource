@@ -20,6 +20,7 @@ from app.components.options_settings_card import OptionsSettingCard
 from app.common.settings.serializer import MainConfig
 from app.components.line_edit_setting_card import LineEditSettingCard
 from app.components.list_setting_card import ListSettingsCard
+from app.components.warning_dialog import WarningDialog
 from app.view.base_view import Widget
 
 base_dir = "./"
@@ -220,3 +221,5 @@ class MainSettings(Widget):
         if update_application():
             self.parent().parent().close()
             sys.exit()
+        else:
+            WarningDialog("You use latest version!", self, hide_cancel_button=True).show()

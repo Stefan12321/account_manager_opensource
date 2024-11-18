@@ -10,6 +10,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtWidgets import QVBoxLayout
 from qfluentwidgets import TabItem
 
+import app.common.settings.app_version
 from app.common.settings import serializer
 from app.common.settings.serializer import MainConfig
 from app.components.account_item import QListAccountsWidgetItem
@@ -27,14 +28,14 @@ main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 if main_config.config_data["version"]["values"]["opensource"] is True:
     from app.common.browser import WebBrowser
 
-    serializer.APP_VERSION += " opensource"
+    app.common.settings.app_version.APP_VERSION += " opensource"
 
 elif main_config.config_data["version"]["values"]["private"] is True:
     try:
         from account_manager_private_part.private_web_browser import WebBrowserPrivate as WebBrowser
         from account_manager_private_part.app.components.settings_dialog import SettingsDialogPrivate as SettingsDialog
 
-        serializer.APP_VERSION += " private"
+        app.common.settings.app_version.APP_VERSION += " private"
     except PermissionError:
         logging.error("You can't use this version of app")
         raise PermissionError

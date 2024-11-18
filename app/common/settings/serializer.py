@@ -5,8 +5,6 @@ import pathlib
 import shutil
 from typing import List
 
-APP_VERSION = "0.6.10"
-
 
 class Serializer:
 
