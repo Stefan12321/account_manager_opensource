@@ -22,7 +22,7 @@
   "default_new_tab": "",
   "onload_pages": [
     "index",
-    "https://whoer.net/ru#"
+    "https://whoer.net/"
   ],
   "auto_set_chrome_version": true,
   "check_for_updates": false,

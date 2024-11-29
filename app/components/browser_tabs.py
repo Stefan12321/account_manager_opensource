@@ -316,30 +316,32 @@ class BrowsersTab(QFrame):
         path = Path(
             rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/profiles/{profile_name}"
         )
-        print(path)
-        os.makedirs(path)
-        user_agent_ = get_user_agent(
-            os=("win"), navigator=("chrome"), device_type=("desktop")
-        )
-        extension_path = Path(rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/extension')
-        if not os.path.exists(extension_path):
-            os.makedirs(extension_path)
-        extension_list = os.listdir(extension_path)
-        data = {
-            "user-agent": user_agent_,
-            "line_number": "",
-            "proxy": "",
-            "latitude": "",
-            "longitude": "",
-            "extensions": {key: False for key in extension_list},
-            "default_new_tab": self.main_config.config_data["default_new_tab"],
-        }
-        s = Serializer()
-        s.serialize(data, Path(rf"{path}/config.json"))
-        self.create_list_item(profile_name, self.listWidget.count())
-        self.browsers_names.append(profile_name)
-        if self.objectName() != "All":
-            self.main_config.update(self.main_config.config_data)
+        if os.path.exists(path):
+            WarningDialog(f"Account with name {profile_name} is already exist. Try different name", self).exec()
+        else:
+            os.makedirs(path)
+            user_agent_ = get_user_agent(
+                os=("win"), navigator=("chrome"), device_type=("desktop")
+            )
+            extension_path = Path(rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/extension')
+            if not os.path.exists(extension_path):
+                os.makedirs(extension_path)
+            extension_list = os.listdir(extension_path)
+            data = {
+                "user-agent": user_agent_,
+                "line_number": "",
+                "proxy": "",
+                "latitude": "",
+                "longitude": "",
+                "extensions": {key: False for key in extension_list},
+                "default_new_tab": self.main_config.config_data["default_new_tab"],
+            }
+            s = Serializer()
+            s.serialize(data, Path(rf"{path}/config.json"))
+            self.create_list_item(profile_name, self.listWidget.count())
+            self.browsers_names.append(profile_name)
+            if self.objectName() != "All":
+                self.main_config.update(self.main_config.config_data)
 
     def export_profiles(self):
         checked_items = self.get_checked_items()

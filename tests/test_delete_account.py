@@ -1,8 +1,9 @@
 import os
-from app.test.fixtures import main_window, create_account
 
-from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
+import pytestqt.qtbot  # noqa
+
+from tests.fixtures import open_main_tab_and_select_test_account, main_window  # noqa
 
 
 def test_delete_profile(qtbot, open_main_tab_and_select_test_account, monkeypatch):
@@ -19,7 +20,9 @@ def test_delete_profile(qtbot, open_main_tab_and_select_test_account, monkeypatc
     qtbot.mouseClick(main_tab.list_tools.delete_button, Qt.LeftButton)
 
     assert account_name not in main_tab.browsers_names
-    assert not os.path.exists(fr"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\TestAccount")
+    assert not os.path.exists(
+        rf"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}\profiles\TestAccount"
+    )
 
 
 def test_delete_profile_without_selecting_any_accounts(qtbot, main_window, monkeypatch):

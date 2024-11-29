@@ -1,14 +1,16 @@
 import os
 from pathlib import Path
 
-import pytestqt.qtbot
-from PyQt5 import QtCore
+import pytestqt.qtbot  # noqa
+from PyQt5 import QtCore  # noqa
 from PyQt5.QtCore import Qt
 
-from app.test.fixtures import main_window, open_main_tab_and_select_test_account
+from tests.fixtures import main_window, open_main_tab_and_select_test_account  # noqa
 
 
-def test_export_profile(qtbot: pytestqt.qtbot.QtBot, open_main_tab_and_select_test_account, monkeypatch):
+def test_export_profile(
+    qtbot: pytestqt.qtbot.QtBot, open_main_tab_and_select_test_account, monkeypatch
+):
     main_tab, account_name = open_main_tab_and_select_test_account
 
     path_to_export = Path(f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/export.zip")

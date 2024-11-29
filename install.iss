@@ -3,7 +3,7 @@
 
 #define AccountsManagerBaseDir "D:\Projects\accounts_manager_opensource"
 
-#define MyAppName "win installer"
+#define MyAppName "Accounts Manager"
 #define MyAppVersion "0.6.10"
 #define MyAppPublisher ""
 #define MyAppURL ""
@@ -29,7 +29,7 @@ DefaultGroupName={#MyAppName}
 ; Uncomment the following line to run in non administrative install mode (install for current user only.)
 ;PrivilegesRequired=lowest
 OutputDir={#AccountsManagerBaseDir}\dist
-OutputBaseFilename=Accounts Manager Setup
+OutputBaseFilename=installer_win
 SetupIconFile={#AccountsManagerBaseDir}\app\resource\logo.ico
 Compression=lzma
 SolidCompression=yes
