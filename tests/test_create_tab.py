@@ -1,12 +1,38 @@
+import pytest
 from PyQt5.QtCore import Qt, QTimer
 
 from app.components.create_new_tab_dialog import CreateTabDialog
-from tests.fixtures import main_window, prepare_config_decorator  # noqa
+from tests.fixtures import main_window, prepare_config  # noqa
 
 from main import Window
 
 
-def test_tab_create(prepare_config_decorator, main_window: Window, qtbot):
+@pytest.mark.parametrize(
+    "prepare_config",
+    [
+        (
+            {
+                "version": {
+                    "type": "dropdown",
+                    "values": {"opensource": True, "private": False},
+                },
+                "theme": {"type": "dropdown", "values": {"Dark": True, "Light": False}},
+                "tabs": {"type": "invisible", "values": {}},
+                "chrome_version": "120",
+                "debug": False,
+                "default_new_tab": "",
+                "onload_pages": ["index"],
+                "auto_set_chrome_version": True,
+                "check_for_updates": False,
+                "change_location": False,
+                "set_random_window_size": False,
+                "accounts_tooltips": False,
+                "python_console": True,
+            }
+        )
+    ],
+)
+def test_tab_create(prepare_config, main_window: Window, qtbot):
     window = main_window
 
     # Find the dialog window (exec() blocks, so we simulate the interaction using QTimer)

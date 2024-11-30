@@ -95,7 +95,7 @@ def open_main_tab_and_select_test_account(
     return main_tab, account_name
 
 
-def before_tests_main_config():
+def before_tests_main_config(data: dict):
     shutil.copyfile(
         f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config/settings.json",
         f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config/settings.json.backup",
@@ -103,24 +103,24 @@ def before_tests_main_config():
     with open(
         f"{os.environ['ACCOUNT_MANAGER_BASE_DIR']}/app/config/settings.json", "w"
     ) as f:
-        data = {
-            "version": {
-                "type": "dropdown",
-                "values": {"opensource": True, "private": False},
-            },
-            "theme": {"type": "dropdown", "values": {"Dark": True, "Light": False}},
-            "tabs": {"type": "invisible", "values": {}},
-            "chrome_version": "120",
-            "debug": False,
-            "default_new_tab": "",
-            "onload_pages": ["index"],
-            "auto_set_chrome_version": True,
-            "check_for_updates": False,
-            "change_location": False,
-            "set_random_window_size": False,
-            "accounts_tooltips": False,
-            "python_console": True,
-        }
+        # data = {
+        #     "version": {
+        #         "type": "dropdown",
+        #         "values": {"opensource": True, "private": False},
+        #     },
+        #     "theme": {"type": "dropdown", "values": {"Dark": True, "Light": False}},
+        #     "tabs": {"type": "invisible", "values": {}},
+        #     "chrome_version": "120",
+        #     "debug": False,
+        #     "default_new_tab": "",
+        #     "onload_pages": ["index"],
+        #     "auto_set_chrome_version": True,
+        #     "check_for_updates": False,
+        #     "change_location": False,
+        #     "set_random_window_size": False,
+        #     "accounts_tooltips": False,
+        #     "python_console": True,
+        # }
         f.write(json.dumps(data))
 
 
@@ -135,7 +135,7 @@ def after_tests_main_config():
 
 
 @pytest.fixture
-def prepare_config_decorator():
-    before_tests_main_config()
+def prepare_config(request):
+    before_tests_main_config(request.param)
     yield
     after_tests_main_config()
