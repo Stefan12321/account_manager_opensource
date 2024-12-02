@@ -3,6 +3,14 @@ All notable changes to this project will be documented in this file.
  
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
+## [0.6.11] - 2024-12-02
+
+### Added
+
+- Sending multiple profiles to tab
+- Removing multiple profiles from tab
+- Selecting profile ranges using shift key
+
 ## [0.6.10] - 2024-11-15
 
 ### Added

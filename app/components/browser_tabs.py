@@ -490,11 +490,20 @@ class BrowsersTab(QFrame):
                 checked_items.append(item)
         return checked_items
 
+    def check_all_items_between(self) -> None:
+        checked_items = self.get_checked_items()
+        start_item = checked_items[0]
+        end_item = checked_items[-1]
+        index1 = self.list_item_arr.index(start_item)
+        index2 = self.list_item_arr.index(end_item)
+        for item in (self.list_item_arr[index1:index2 + 1] if index1 < index2 else self.list_item_arr[index2:index1 + 1]):
+            widget = self.listWidget.itemWidget(item)
+            widget.CheckBox.setChecked(True)
     def on_tab_dropped_account(self, account_name: str):
         tab_name = self.sender().routeKey()
         self.add_account_to_tab(account_name, tab_name)
 
-    def add_account_to_tab(self, account_name, tab_name):
+    def add_account_to_tab(self, account_name: str, tab_name: str) -> None:
         target_tab = self.parent_widget.get_tab_with_name(tab_name)
         if (
             account_name not in self.main_config.config_data["tabs"]["values"][tab_name]
@@ -504,8 +513,18 @@ class BrowsersTab(QFrame):
             target_tab.main_config.update(target_tab.main_config.config_data)
         target_tab.update_item_list()
 
+    def add_accounts_to_tab(self, account_names: list[str], tab_name: str) -> None:
+        for account_name in account_names:
+            self.add_account_to_tab(account_name, tab_name)
+
     def remove_account_from_tab(self, account_name: str):
         self.browsers_names.remove(account_name)
+        self.main_config.update(self.main_config.config_data)
+        self.update_item_list()
+
+    def remove_accounts_from_tab(self, account_names: list[str]) -> None:
+        for account_name in account_names:
+            self.browsers_names.remove(account_name)
         self.main_config.update(self.main_config.config_data)
         self.update_item_list()
 

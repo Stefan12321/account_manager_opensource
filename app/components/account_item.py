@@ -7,15 +7,24 @@ from typing import Any, List
 
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSignal, Qt, QMimeData, QRect
-from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor, QKeySequence
-from PyQt5.QtWidgets import QWidget, QListWidgetItem, QAction, QShortcut
-from qfluentwidgets import FluentIcon, ToolTipFilter, ToolTipPosition, RoundMenu, Action, MenuAnimationType
+from PyQt5.QtGui import QIcon, QDrag, QPixmap, QPainter, QColor
+from PyQt5.QtWidgets import QWidget, QListWidgetItem, QAction, QApplication
+from qfluentwidgets import (
+    FluentIcon,
+    ToolTipFilter,
+    ToolTipPosition,
+    RoundMenu,
+    Action,
+    MenuAnimationType,
+)
 
 from app.common.settings.serializer import MainConfig, Config
 
 main_config = MainConfig(os.environ["ACCOUNT_MANAGER_PATH_TO_SETTINGS"])
 if main_config.config_data["version"]["values"]["private"] is True:
-    from account_manager_private_part.app.components.settings_dialog import SettingsDialogPrivate as SettingsDialog
+    from account_manager_private_part.app.components.settings_dialog import (
+        SettingsDialogPrivate as SettingsDialog,
+    )
 else:
     from app.components.settings_dialog import SettingsDialog
 from app.components.one_accout_line_widget import Ui_Form
@@ -24,17 +33,24 @@ from app.components.one_accout_line_widget import Ui_Form
 class QWidgetOneAccountLine(QWidget, Ui_Form):
     locals_signal = pyqtSignal(dict)
 
-    def __init__(self, name: str, main_config: MainConfig, logger: logging.Logger, index: int, parent=None):
+    def __init__(
+        self,
+        name: str,
+        main_config: MainConfig,
+        logger: logging.Logger,
+        index: int,
+        parent=None,
+    ):
         super(QWidgetOneAccountLine, self).__init__(parent)
         self.is_animation_running = None
-        self.parent_widget = parent
+        self.browser_tabs = parent
         self.index = index
         self.logger = logger
         self.name = name
         self.config_name = None
-        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles/{self.name}'
+        self.path = rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}/profiles/{self.name}'
         self.main_config = main_config
-        self.config = Config(fr"{self.path}/config.json")
+        self.config = Config(rf"{self.path}/config.json")
         self._queue = None
         self.locals = None
         self.locals_signal.connect(self.set_locals)
@@ -43,17 +59,21 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         self.settings_button.setIcon(FluentIcon.SETTING)
         self.settings_button.clicked.connect(self.open_settings)
         self.account_name_label.name_changed.connect(self._update_name)
+
         self.stop_animation()
         self._init_icon()
 
         if main_config.config_data["accounts_tooltips"]:
             self.setToolTips()
-            self.installEventFilter(ToolTipFilter(self, showDelay=300, position=ToolTipPosition.TOP))
+            self.installEventFilter(
+                ToolTipFilter(self, showDelay=300, position=ToolTipPosition.TOP)
+            )
 
         if "name" in self.config.config_data:
             self.set_account_name(self.config.config_data["name"])
         else:
             self.set_account_name(self.name)
+
 
     def get_name(self) -> str:
         return self.name
@@ -63,10 +83,16 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
             if os.path.exists(self.config.config_data["icon"]):
                 icon = QIcon(self.config.config_data["icon"])
             else:
-                self.logger.error(f"icon {self.config.config_data['icon']} not found. Set default")
-                icon = QIcon(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/Google_Chrome_icon.svg')
+                self.logger.error(
+                    f"icon {self.config.config_data['icon']} not found. Set default"
+                )
+                icon = QIcon(
+                    f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/Google_Chrome_icon.svg'
+                )
         else:
-            icon = QIcon(f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/Google_Chrome_icon.svg')
+            icon = QIcon(
+                f'{os.environ["ACCOUNT_MANAGER_PATH_TO_RESOURCES"]}/Google_Chrome_icon.svg'
+            )
 
         self.browser_icon.setIcon(icon)
         self.browser_icon.icon_changed.connect(self._set_new_icon)
@@ -89,17 +115,21 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
     def _update_name(self, name: str):
         os.rename(Path(self.path), f"{Path(self.path).parent}/{name}")
         self.name = name
-        self.path = fr'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
+        self.path = rf'{os.environ["ACCOUNT_MANAGER_BASE_DIR"]}\profiles\{self.name}'
+
+
 
     def setToolTips(self):
         self.setToolTip(str(self.config))
 
     def open_settings(self):
-        dlg = SettingsDialog(_queue=self._queue,
-                             logger=self.logger,
-                             main_config=self.main_config,
-                             account_name=self.name,
-                             browser_locals=self.locals)
+        dlg = SettingsDialog(
+            _queue=self._queue,
+            logger=self.logger,
+            main_config=self.main_config,
+            account_name=self.name,
+            browser_locals=self.locals,
+        )
         dlg.show()
         dlg.exec()
 
@@ -129,11 +159,17 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
             pixmap = QPixmap(self.size())
             pixmap.fill(Qt.transparent)  # Fill with transparent color
             painter = QPainter(pixmap)
-            painter.setRenderHint(QPainter.Antialiasing)  # Enable anti-aliasing for smooth edges
-            rounded_rect = QRect(0, 0, self.width(), self.height()).adjusted(1, 1, -1, -1)
+            painter.setRenderHint(
+                QPainter.Antialiasing
+            )  # Enable anti-aliasing for smooth edges
+            rounded_rect = QRect(0, 0, self.width(), self.height()).adjusted(
+                1, 1, -1, -1
+            )
             painter.setBrush(QColor(60, 60, 60, 100))
             painter.setPen(Qt.NoPen)
-            painter.drawRoundedRect(rounded_rect, 5, 5)  # Adjust the radius values for roundness
+            painter.drawRoundedRect(
+                rounded_rect, 5, 5
+            )  # Adjust the radius values for roundness
             painter.end()
             drag.setHotSpot(e.pos())
             drag.setPixmap(pixmap)
@@ -145,20 +181,44 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
         submenu = RoundMenu("Send to tab", self)
         submenu.setIcon(FluentIcon.ADD)
         send_to_tab_actions_list: List[Action] = []
-        for tab in self.parent_widget.parent_widget.tabBar.items:
+        for tab in self.browser_tabs.parent_widget.tabBar.items:
             tab_name = tab.routeKey()
             if tab_name != "All":
                 action = Action(FluentIcon.FOLDER, tab_name)
                 action.triggered.connect(
-                    lambda checked, tab_key=tab_name: self.parent_widget.add_account_to_tab(self.name, tab_key))
+                    lambda checked,
+                    tab_key=tab_name: self.browser_tabs.add_account_to_tab(
+                        self.name, tab_key
+                    )
+                    if len(self.browser_tabs.get_checked_items()) <= 1
+                    else self.browser_tabs.add_accounts_to_tab(
+                        [
+                            account.name
+                            for account in self.browser_tabs.get_checked_items()
+                        ],
+                        tab_key,
+                    )
+                )
                 send_to_tab_actions_list.append(action)
         submenu.addActions(send_to_tab_actions_list)
 
         menu.addMenu(submenu)
-        current_tab_name = self.parent_widget.parent_widget.tabBar.currentTab().routeKey()
+        current_tab_name = (
+            self.browser_tabs.parent_widget.tabBar.currentTab().routeKey()
+        )
         if current_tab_name != "All":
-            remove_from_tab_action = Action(FluentIcon.DELETE, f"Remove {self.get_name()} from current tab")
-            remove_from_tab_action.triggered.connect(lambda: self.parent_widget.remove_account_from_tab(self.name))
+            remove_from_tab_action = Action(
+                # FluentIcon.DELETE, f"Remove {self.get_name()} from current tab"
+                FluentIcon.DELETE,
+                f"Remove {[account.name for account in self.browser_tabs.get_checked_items()]} from current tab",
+            )
+            remove_from_tab_action.triggered.connect(
+                lambda: self.browser_tabs.remove_account_from_tab(self.name)
+                if len(self.browser_tabs.get_checked_items()) <= 1
+                else self.browser_tabs.remove_accounts_from_tab(
+                    [account.name for account in self.browser_tabs.get_checked_items()]
+                )
+            )
             menu.addAction(remove_from_tab_action)
 
         settings_action = Action(FluentIcon.SETTING, "Settings")
@@ -167,8 +227,10 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
 
         # add separator
         menu.addSeparator()
-        select_all_action = QAction('Select all', shortcut='Ctrl+A')
-        select_all_action.triggered.connect(lambda: self.parent_widget.list_tools.CheckBox.nextCheckState())
+        select_all_action = QAction("Select all", shortcut="Ctrl+A")
+        select_all_action.triggered.connect(
+            lambda: self.browser_tabs.list_tools.CheckBox.nextCheckState()
+        )
 
         menu.addAction(select_all_action)
 
@@ -177,8 +239,13 @@ class QWidgetOneAccountLine(QWidget, Ui_Form):
 
 
 class QListAccountsWidgetItem(QListWidgetItem):
-
-    def __init__(self, name: str, widget: QWidgetOneAccountLine, main_config: MainConfig, parent=None, ):
+    def __init__(
+        self,
+        name: str,
+        widget: QWidgetOneAccountLine,
+        main_config: MainConfig,
+        parent=None,
+    ):
         super(QListAccountsWidgetItem, self).__init__(parent)
         self.name = name
         self.main_config = main_config
@@ -186,7 +253,12 @@ class QListAccountsWidgetItem(QListWidgetItem):
         self.thread: threading.Thread or None = None
         self.widget = widget
         self.widget.account_name_label.name_changed.connect(self.update_name)
+        self.widget.CheckBox.stateChanged.connect(self._update_checkbox)
         self.setSizeHint(self.widget.sizeHint())
 
     def update_name(self, old_name: str, name: str):
         self.name = name
+
+    def _update_checkbox(self):
+        if QApplication.keyboardModifiers() == Qt.ShiftModifier:
+            self.widget.browser_tabs.check_all_items_between()
