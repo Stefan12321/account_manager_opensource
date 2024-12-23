@@ -5,6 +5,7 @@ import sys
 
 from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
 from app.common.settings.serializer import Config, MainConfig
+from app.common.user_agents import get_user_agent
 from app.components.flyout_dialog_with_buttons import FlyoutDialogWithButtons
 from app.components.setting_dialog.line_edit_card import LineEditCard
 from app.components.setting_dialog.line_edit_card_with_button import (
@@ -112,8 +113,8 @@ class SettingsDialog(BaseSettingsDialog):
         self.left_column = QVBoxLayout()
         self.right_column = QVBoxLayout()
 
-        self.user_agent_card = LineEditCard("User agent")
-
+        self.user_agent_card = LineEditCardWithButton("User agent", "regenerate")
+        self.user_agent_card.connect_button(self.regenerate_user_agent)
         self.extensions_card = ListWidgetCard("Extensions")
         self.open_in_new_tab_card = LineEditCardWithButton(
             "Open new tab with url", "OPEN"
@@ -143,6 +144,12 @@ class SettingsDialog(BaseSettingsDialog):
         self.hBoxLayout.addLayout(self.left_column)
         self.hBoxLayout.addLayout(self.right_column)
         self.setGeometry(200, 200, 800, 600)
+
+    def regenerate_user_agent(self):
+        user_agent = get_user_agent(
+            os=("win"), navigator=("chrome"), device_type=("desktop")
+        )
+        self.user_agent_card.set_data(user_agent)
 
 
 class AllSettingsDialog(BaseSettingsDialog):
